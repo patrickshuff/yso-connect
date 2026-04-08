@@ -8,6 +8,9 @@ import {
   UserCheck,
   Shield,
   Calendar,
+  CalendarDays,
+  FileText,
+  MessageSquare,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,6 +24,9 @@ const navItems = [
   { label: "Teams", href: "/teams", icon: Shield },
   { label: "Players", href: "/players", icon: Users },
   { label: "Guardians", href: "/guardians", icon: UserCheck },
+  { label: "Events", href: "/events", icon: CalendarDays },
+  { label: "Messages", href: "/messages", icon: MessageSquare },
+  { label: "Forms", href: "/forms", icon: FileText },
   { label: "Seasons", href: "/seasons", icon: Calendar },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
