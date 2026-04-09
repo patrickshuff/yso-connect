@@ -63,7 +63,7 @@ export async function createEvent(
     })
     .returning();
 
-  await createDefaultReminders(event.id, start);
+  await createDefaultReminders(event.id, start, orgId);
 
   revalidatePath(`/dashboard/${orgId}/events`);
   revalidatePath(`/dashboard/${orgId}`);

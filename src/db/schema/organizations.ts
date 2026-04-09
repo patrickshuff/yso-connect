@@ -1,4 +1,4 @@
-import { index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { subscriptionStatusEnum } from "./enums";
 
 export const organizations = pgTable("organizations", {
@@ -14,6 +14,8 @@ export const organizations = pgTable("organizations", {
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
   subscriptionStatus: subscriptionStatusEnum("subscription_status").notNull().default("trial"),
   subscriptionPaidUntil: timestamp("subscription_paid_until", { withTimezone: true }),
+  reminders24hEnabled: boolean("reminders_24h_enabled").notNull().default(true),
+  reminders2hEnabled: boolean("reminders_2h_enabled").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 }, (table) => [

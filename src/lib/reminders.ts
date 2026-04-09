@@ -1,16 +1,36 @@
 import { eq, and, lte } from "drizzle-orm";
 import { db } from "@/db";
-import { reminders, events } from "@/db/schema";
+import { reminders, events, organizations } from "@/db/schema";
 import { sendMessage } from "@/lib/messaging";
 import { logger } from "@/lib/logger";
 
 /**
  * Create the default 24h and 2h reminders for an event.
+ * Respects the org's reminder settings when orgId is provided.
  */
 export async function createDefaultReminders(
   eventId: string,
   startTime: Date,
+  orgId?: string,
 ): Promise<void> {
+  let reminders24hEnabled = true;
+  let reminders2hEnabled = true;
+
+  if (orgId) {
+    const [org] = await db
+      .select({
+        reminders24hEnabled: organizations.reminders24hEnabled,
+        reminders2hEnabled: organizations.reminders2hEnabled,
+      })
+      .from(organizations)
+      .where(eq(organizations.id, orgId));
+
+    if (org) {
+      reminders24hEnabled = org.reminders24hEnabled;
+      reminders2hEnabled = org.reminders2hEnabled;
+    }
+  }
+
   const twentyFourHoursBefore = new Date(
     startTime.getTime() - 24 * 60 * 60 * 1000,
   );
@@ -23,7 +43,7 @@ export async function createDefaultReminders(
     reminderType: "24h_before" | "2h_before";
   }[] = [];
 
-  if (twentyFourHoursBefore > now) {
+  if (reminders24hEnabled && twentyFourHoursBefore > now) {
     values.push({
       eventId,
       reminderTime: twentyFourHoursBefore,
@@ -31,7 +51,7 @@ export async function createDefaultReminders(
     });
   }
 
-  if (twoHoursBefore > now) {
+  if (reminders2hEnabled && twoHoursBefore > now) {
     values.push({
       eventId,
       reminderTime: twoHoursBefore,
@@ -43,7 +63,15 @@ export async function createDefaultReminders(
     await db.insert(reminders).values(values);
     logger.info("Created default reminders", {
       eventId,
+      orgId,
       count: values.length,
+    });
+  } else {
+    logger.info("No reminders created", {
+      eventId,
+      orgId,
+      reminders24hEnabled,
+      reminders2hEnabled,
     });
   }
 }
