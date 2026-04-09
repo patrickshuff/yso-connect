@@ -1,0 +1,1 @@
+ALTER TABLE "sms_consents" ALTER COLUMN "organization_id" DROP NOT NULL;

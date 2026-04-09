@@ -54,7 +54,7 @@ export async function quickSetupTeam(
   const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
   try {
-    // Create everything in a transaction
+    // Create org, season, sport, team in a transaction
     const result = await db.transaction(async (tx) => {
       const [org] = await tx
         .insert(organizations)
@@ -66,8 +66,6 @@ export async function quickSetupTeam(
           subscriptionStatus: "trial",
         })
         .returning();
-
-      await createMembership(org.id, userId, "owner");
 
       const [season] = await tx
         .insert(seasons)
@@ -99,6 +97,9 @@ export async function quickSetupTeam(
 
       return { orgId: org.id, sportId: sport.id };
     });
+
+    // Create membership outside transaction (uses separate db connection)
+    await createMembership(result.orgId, userId, "owner");
 
     return { success: true, orgId: result.orgId };
   } catch (error) {
