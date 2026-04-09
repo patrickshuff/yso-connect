@@ -1,5 +1,14 @@
 # YSO Connect - Project History
 
+## 2026-04-09 - Form management and preview env setup
+
+### What changed
+- **Form edit/delete**: Added `updateForm` and `deleteForm` server actions with admin auth. Created `EditFormDialog` (pre-filled) and `DeleteFormDialog` (with confirmation). Edit/delete buttons on forms list cards (admin-only).
+- **Assignment dropdown fixed**: Guardian form submission dropdown now shows team/player names instead of raw UUIDs.
+- **Preview env vars**: Set up all required Preview environment variables so preview deployments work.
+
+---
+
 ## 2026-04-08 - Comprehensive audit and critical bug fixes
 
 ### What changed
