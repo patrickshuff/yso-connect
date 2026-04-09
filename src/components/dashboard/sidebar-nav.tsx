@@ -10,6 +10,7 @@ import {
   Calendar,
   CalendarDays,
   FileText,
+  Inbox,
   MessageSquare,
   Settings,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const navItems = [
   { label: "Guardians", href: "/guardians", icon: UserCheck },
   { label: "Events", href: "/events", icon: CalendarDays },
   { label: "Messages", href: "/messages", icon: MessageSquare },
+  { label: "Submissions", href: "/submissions", icon: Inbox },
   { label: "Forms", href: "/forms", icon: FileText },
   { label: "Seasons", href: "/seasons", icon: Calendar },
   { label: "Settings", href: "/settings", icon: Settings },

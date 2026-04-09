@@ -82,3 +82,8 @@ export const formSubmissionStatusEnum = pgEnum("form_submission_status", [
   "pending",
   "completed",
 ]);
+
+export const interestSubmissionStatusEnum = pgEnum(
+  "interest_submission_status",
+  ["new", "contacted", "enrolled", "declined"],
+);
