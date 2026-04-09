@@ -6,7 +6,7 @@ import { consentMethodEnum } from "./enums";
 export const smsConsents = pgTable("sms_consents", {
   id: uuid("id").primaryKey().defaultRandom(),
   guardianId: uuid("guardian_id").references(() => guardians.id, { onDelete: "set null" }),
-  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
   phoneNumber: text("phone_number").notNull(),
   consentGiven: boolean("consent_given").notNull(),
   consentMethod: consentMethodEnum("consent_method").notNull(),

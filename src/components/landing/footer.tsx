@@ -33,7 +33,7 @@ export function Footer() {
             </span>
           </div>
 
-          <nav className="flex items-center gap-6 text-sm text-muted-foreground">
+          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
             <a
               href="#features"
               className="transition-colors hover:text-foreground"
@@ -51,6 +51,24 @@ export function Footer() {
               className="transition-colors hover:text-foreground"
             >
               Sign In
+            </Link>
+            <Link
+              href="/privacy"
+              className="transition-colors hover:text-foreground"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="transition-colors hover:text-foreground"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="/consent"
+              className="transition-colors hover:text-foreground"
+            >
+              SMS Consent
             </Link>
           </nav>
 

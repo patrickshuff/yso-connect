@@ -8,7 +8,7 @@ Multi-tenant youth sports organization platform.
 - Tailwind CSS v4 + shadcn/ui
 - Drizzle ORM + Postgres
 - Clerk for auth
-- Vercel for deployment
+- Vercel for deployment (team: jarobe)
 
 ## Conventions
 - Use yarn (not npm)
