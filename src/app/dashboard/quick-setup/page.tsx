@@ -178,7 +178,7 @@ export default function QuickSetupPage() {
               </div>
               <p className="pt-2 text-xs text-zinc-500">
                 Your 30-day free trial has started. After that, it&apos;s just
-                $5/month.
+                $49/month. Cancel anytime.
               </p>
             </div>
 

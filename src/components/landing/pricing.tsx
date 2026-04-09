@@ -85,69 +85,56 @@ function PricingTier({
   );
 }
 
-const coachTier: PricingTierProps = {
-  name: "Per Team",
-  price: "$5",
-  period: "/month",
-  description: "For individual coaches managing a single team. Free for 30 days.",
-  features: [
-    "Full roster management",
-    "SMS + email messaging",
-    "Game and practice schedule",
-    "Automated reminders",
-    "Digital forms and signatures",
-    "No credit card to start",
-  ],
-  highlighted: true,
-  cta: "Start free — no card required",
-  ctaHref: "/sign-up",
-};
-
-const orgTiers: PricingTierProps[] = [
+const tiers: PricingTierProps[] = [
   {
-    name: "Small Org",
-    price: "$199",
-    period: "/year",
-    description: "For small leagues with a handful of teams.",
+    name: "Starter",
+    price: "$49",
+    period: "/month",
+    description: "For small leagues and single-sport organizations.",
     features: [
-      "Up to 50 players",
+      "Up to 10 teams",
+      "Full roster management",
+      "SMS + email messaging",
+      "Game and practice schedule",
+      "Automated reminders",
+      "Digital forms and signatures",
+      "30-day free trial",
+    ],
+    cta: "Start free — no card required",
+    ctaHref: "/sign-up",
+  },
+  {
+    name: "Pro",
+    price: "$99",
+    period: "/month",
+    description: "For growing organizations with multiple teams and sports.",
+    features: [
+      "Up to 30 teams",
+      "Everything in Starter",
+      "Payment collection",
+      "Multi-sport divisions",
+      "Multi-season management",
+      "Priority email support",
+    ],
+    highlighted: true,
+    cta: "Start free — no card required",
+    ctaHref: "/sign-up",
+  },
+  {
+    name: "League",
+    price: "$249",
+    period: "/month",
+    description: "For large multi-sport leagues and associations.",
+    features: [
       "Unlimited teams",
-      "Everything coaches get",
+      "Everything in Pro",
       "Public org page",
       "Interest signup forms",
-    ],
-    cta: "Contact us",
-    ctaHref: "mailto:support@ysoconnect.com?subject=Small%20Org%20Plan",
-  },
-  {
-    name: "Starter Org",
-    price: "$999",
-    period: "/year",
-    description: "For single-sport organizations ready to grow.",
-    features: [
-      "Up to 200 players",
-      "Everything in Small",
-      "Payment collection",
-      "Multi-season management",
-      "Email support",
-    ],
-    cta: "Contact us",
-    ctaHref: "mailto:support@ysoconnect.com?subject=Starter%20Org%20Plan",
-  },
-  {
-    name: "Growth Org",
-    price: "$1,999",
-    period: "/year",
-    description: "For multi-sport organizations with multiple seasons.",
-    features: [
-      "Up to 500 players",
-      "Everything in Starter",
-      "Priority email support",
-      "Multi-sport divisions",
       "Onboarding assistance",
+      "Dedicated support",
     ],
     cta: "Contact us",
-    ctaHref: "mailto:support@ysoconnect.com?subject=Growth%20Org%20Plan",
+    ctaHref: "mailto:support@ysoconnect.com?subject=League%20Plan",
   },
 ];
 
@@ -167,21 +154,15 @@ export function Pricing() {
           </p>
         </div>
 
-        <div className="mx-auto mt-12 max-w-md">
-          <PricingTier {...coachTier} />
-        </div>
-
-        <div className="mx-auto mt-6 max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Running an entire organization?
-          </p>
-        </div>
-
-        <div className="mx-auto mt-6 grid max-w-5xl gap-6 lg:grid-cols-3">
-          {orgTiers.map((tier) => (
+        <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3">
+          {tiers.map((tier) => (
             <PricingTier key={tier.name} {...tier} />
           ))}
         </div>
+
+        <p className="mx-auto mt-8 max-w-xl text-center text-sm text-muted-foreground">
+          Cancel anytime. Perfect for seasonal leagues — pay only during your active months.
+        </p>
       </div>
     </section>
   );

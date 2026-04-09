@@ -103,8 +103,8 @@ function ExpiredGate({ orgId }: { orgId: string }) {
             teams, players, and schedules.
           </p>
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
-            <p className="text-2xl font-bold">$5</p>
-            <p className="text-sm text-muted-foreground">per month</p>
+            <p className="text-2xl font-bold">$49</p>
+            <p className="text-sm text-muted-foreground">per month — cancel anytime</p>
           </div>
           <a href={`/dashboard/${orgId}/billing`}>
             <Button className="mt-2 w-full">Subscribe now</Button>

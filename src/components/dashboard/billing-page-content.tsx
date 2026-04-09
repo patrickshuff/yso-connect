@@ -185,7 +185,7 @@ export function BillingPageContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="size-5" />
-                Coach Plan
+                Starter Plan
               </CardTitle>
               <CardDescription>
                 Full access to your dashboard, teams, and messaging.
@@ -193,8 +193,8 @@ export function BillingPageContent({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
-                <p className="text-4xl font-bold">$5</p>
-                <p className="text-sm text-muted-foreground">per month</p>
+                <p className="text-4xl font-bold">$49</p>
+                <p className="text-sm text-muted-foreground">per month — cancel anytime</p>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export function BillingPageContent({
                 onClick={handleUpgrade}
                 disabled={loading}
               >
-                {loading ? "Redirecting..." : "Subscribe for $5/mo"}
+                {loading ? "Redirecting..." : "Subscribe for $49/mo"}
               </Button>
             </CardContent>
           </Card>
