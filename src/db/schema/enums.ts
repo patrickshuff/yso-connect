@@ -108,3 +108,9 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "expired",
   "none",
 ]);
+
+export const consentMethodEnum = pgEnum("consent_method", [
+  "web_form",
+  "verbal",
+  "written",
+]);
