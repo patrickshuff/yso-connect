@@ -29,7 +29,7 @@ interface FormSubmitFormProps {
   requiresSignature: boolean;
   guardianId: string;
   guardianName: string;
-  assignments: { id: string; assignmentType: string; assignmentTargetId: string | null }[];
+  assignments: { id: string; assignmentType: string; assignmentTargetId: string | null; targetName: string }[];
   playerOptions: { id: string; name: string }[];
 }
 
@@ -143,9 +143,7 @@ export function FormSubmitForm({
                   <SelectContent>
                     {assignments.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
-                        {a.assignmentType === "organization"
-                          ? "Organization-wide"
-                          : `${a.assignmentType}: ${a.assignmentTargetId ?? ""}`}
+                        {a.targetName}
                       </SelectItem>
                     ))}
                   </SelectContent>

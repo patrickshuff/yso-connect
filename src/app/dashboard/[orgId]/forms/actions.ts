@@ -41,6 +41,7 @@ export interface FormWithStats {
   title: string;
   description: string | null;
   formType: FormType;
+  content: string;
   requiresSignature: boolean;
   isActive: boolean;
   createdAt: Date;
@@ -223,6 +224,86 @@ export async function submitForm(
 }
 
 // ---------------------------------------------------------------------------
+// updateForm
+// ---------------------------------------------------------------------------
+
+export async function updateForm(
+  orgId: string,
+  formId: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { userId } = await auth();
+  if (!userId) return { success: false, error: "Unauthorized" };
+
+  await requireRole(orgId, userId, "admin");
+
+  // Verify the form belongs to this org
+  const [existing] = await db
+    .select({ id: forms.id })
+    .from(forms)
+    .where(and(eq(forms.id, formId), eq(forms.organizationId, orgId)));
+
+  if (!existing) {
+    return { success: false, error: "Form not found" };
+  }
+
+  const title = formData.get("title") as string | null;
+  const description = (formData.get("description") as string | null) || null;
+  const formType = formData.get("formType") as FormType | null;
+  const content = formData.get("content") as string | null;
+  const requiresSignature = formData.get("requiresSignature") === "on";
+
+  if (!title || !formType || !content) {
+    return { success: false, error: "Title, type, and content are required" };
+  }
+
+  await db
+    .update(forms)
+    .set({
+      title,
+      description,
+      formType,
+      content,
+      requiresSignature,
+      updatedAt: new Date(),
+    })
+    .where(eq(forms.id, formId));
+
+  revalidatePath(`/dashboard/${orgId}/forms`);
+  revalidatePath(`/dashboard/${orgId}/forms/${formId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// deleteForm
+// ---------------------------------------------------------------------------
+
+export async function deleteForm(
+  orgId: string,
+  formId: string,
+): Promise<ActionResult> {
+  const { userId } = await auth();
+  if (!userId) return { success: false, error: "Unauthorized" };
+
+  await requireRole(orgId, userId, "admin");
+
+  // Verify the form belongs to this org
+  const [existing] = await db
+    .select({ id: forms.id })
+    .from(forms)
+    .where(and(eq(forms.id, formId), eq(forms.organizationId, orgId)));
+
+  if (!existing) {
+    return { success: false, error: "Form not found" };
+  }
+
+  await db.delete(forms).where(eq(forms.id, formId));
+
+  revalidatePath(`/dashboard/${orgId}/forms`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
 // Data fetchers
 // ---------------------------------------------------------------------------
 
@@ -270,6 +351,7 @@ export async function getFormsWithStats(orgId: string): Promise<FormWithStats[]>
     title: f.title,
     description: f.description,
     formType: f.formType,
+    content: f.content,
     requiresSignature: f.requiresSignature,
     isActive: f.isActive,
     createdAt: f.createdAt,
@@ -471,9 +553,56 @@ export async function getGuardianAssignments(orgId: string, formId: string, cler
       return a.assignmentTargetId && !submittedSet.has(`${a.id}:${a.assignmentTargetId}`);
     });
 
+  // Resolve target names for assignments
+  const teamTargetIds = assignmentOptions
+    .filter((a) => a.assignmentType === "team" && a.assignmentTargetId)
+    .map((a) => a.assignmentTargetId!);
+
+  const playerTargetIds = assignmentOptions
+    .filter((a) => a.assignmentType === "player" && a.assignmentTargetId)
+    .map((a) => a.assignmentTargetId!);
+
+  const teamNameMap = new Map<string, string>();
+  const playerNameMap = new Map<string, string>();
+
+  if (teamTargetIds.length > 0) {
+    const teamRows = await db
+      .select({ id: teams.id, name: teams.name })
+      .from(teams)
+      .where(sql`${teams.id} = ANY(${teamTargetIds})`);
+    for (const t of teamRows) {
+      teamNameMap.set(t.id, t.name);
+    }
+  }
+
+  if (playerTargetIds.length > 0) {
+    const playerRows = await db
+      .select({ id: players.id, firstName: players.firstName, lastName: players.lastName })
+      .from(players)
+      .where(sql`${players.id} = ANY(${playerTargetIds})`);
+    for (const p of playerRows) {
+      playerNameMap.set(p.id, `${p.firstName} ${p.lastName}`);
+    }
+  }
+
+  const assignmentsWithNames = assignmentOptions.map((a) => {
+    let targetName = "Organization-wide";
+    if (a.assignmentType === "team" && a.assignmentTargetId) {
+      targetName = teamNameMap.get(a.assignmentTargetId) ?? "Unknown Team";
+    } else if (a.assignmentType === "player" && a.assignmentTargetId) {
+      targetName = playerNameMap.get(a.assignmentTargetId) ?? "Unknown Player";
+    }
+    return {
+      id: a.id,
+      assignmentType: a.assignmentType,
+      assignmentTargetId: a.assignmentTargetId,
+      targetName,
+    };
+  });
+
   return {
     guardian: { id: guardian.id, firstName: guardian.firstName, lastName: guardian.lastName },
-    assignments: assignmentOptions,
+    assignments: assignmentsWithNames,
     playerOptions: linkedPlayers.map((p) => ({
       id: p.playerId,
       name: `${p.playerFirstName} ${p.playerLastName}`,

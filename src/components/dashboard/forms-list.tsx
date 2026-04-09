@@ -7,11 +7,14 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EditFormDialog } from "@/components/dashboard/edit-form-dialog";
+import { DeleteFormDialog } from "@/components/dashboard/delete-form-dialog";
 import type { FormWithStats } from "@/app/dashboard/[orgId]/forms/actions";
 
 interface FormsListProps {
   orgId: string;
   forms: FormWithStats[];
+  isAdmin?: boolean;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -22,7 +25,7 @@ const TYPE_LABELS: Record<string, string> = {
   custom: "Custom",
 };
 
-export function FormsList({ orgId, forms }: FormsListProps) {
+export function FormsList({ orgId, forms, isAdmin }: FormsListProps) {
   if (forms.length === 0) {
     return (
       <Card>
@@ -41,20 +44,36 @@ export function FormsList({ orgId, forms }: FormsListProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {forms.map((form) => (
-        <Link
-          key={form.id}
-          href={`/dashboard/${orgId}/forms/${form.id}`}
-          className="block"
-        >
-          <Card className="transition-colors hover:border-primary/30">
-            <CardHeader>
-              <div className="flex items-start justify-between">
+        <Card key={form.id} className="transition-colors hover:border-primary/30">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <Link
+                href={`/dashboard/${orgId}/forms/${form.id}`}
+                className="min-w-0 flex-1"
+              >
                 <CardTitle className="line-clamp-1">{form.title}</CardTitle>
+              </Link>
+              <div className="flex items-center gap-1 ml-2 shrink-0">
                 <Badge variant={form.isActive ? "default" : "secondary"}>
                   {form.isActive ? "Active" : "Inactive"}
                 </Badge>
+                {isAdmin && (
+                  <>
+                    <EditFormDialog orgId={orgId} form={form} />
+                    <DeleteFormDialog
+                      orgId={orgId}
+                      formId={form.id}
+                      formTitle={form.title}
+                    />
+                  </>
+                )}
               </div>
-            </CardHeader>
+            </div>
+          </CardHeader>
+          <Link
+            href={`/dashboard/${orgId}/forms/${form.id}`}
+            className="block"
+          >
             <CardContent className="space-y-2">
               <div className="flex items-center gap-2">
                 <Badge variant="outline">{TYPE_LABELS[form.formType] ?? form.formType}</Badge>
@@ -71,8 +90,8 @@ export function FormsList({ orgId, forms }: FormsListProps) {
                 {form.totalCompleted} of {form.totalAssigned} completed
               </p>
             </CardContent>
-          </Card>
-        </Link>
+          </Link>
+        </Card>
       ))}
     </div>
   );

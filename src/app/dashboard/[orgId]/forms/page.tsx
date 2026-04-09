@@ -1,4 +1,7 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { getFormsWithStats } from "./actions";
+import { getMembership } from "@/lib/memberships";
 import { CreateFormDialog } from "@/components/dashboard/create-form-dialog";
 import { FormsList } from "@/components/dashboard/forms-list";
 
@@ -8,7 +11,18 @@ export default async function FormsPage({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const formRows = await getFormsWithStats(orgId);
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
+  const [formRows, membership] = await Promise.all([
+    getFormsWithStats(orgId),
+    getMembership(orgId, userId),
+  ]);
+
+  const isAdmin = membership?.role === "admin" || membership?.role === "owner";
 
   return (
     <div className="space-y-6">
@@ -21,10 +35,10 @@ export default async function FormsPage({
             Create and manage forms, waivers, and permission slips.
           </p>
         </div>
-        <CreateFormDialog orgId={orgId} />
+        {isAdmin && <CreateFormDialog orgId={orgId} />}
       </div>
 
-      <FormsList orgId={orgId} forms={formRows} />
+      <FormsList orgId={orgId} forms={formRows} isAdmin={isAdmin} />
     </div>
   );
 }
