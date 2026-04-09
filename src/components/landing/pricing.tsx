@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardHeader,
@@ -9,6 +9,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface PricingTierProps {
   name: string;
@@ -66,14 +67,18 @@ function PricingTier({
           ))}
         </ul>
         <div className="mt-8">
-          <Button
-            render={<Link href={ctaHref} />}
-            variant={highlighted ? "default" : "outline"}
-            className="w-full"
-            size="lg"
+          <Link
+            href={ctaHref}
+            className={cn(
+              buttonVariants({
+                variant: highlighted ? "default" : "outline",
+                size: "lg",
+              }),
+              "w-full"
+            )}
           >
             {cta}
-          </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Hero() {
   return (
@@ -27,22 +28,25 @@ export function Hero() {
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Button
-              render={<Link href="/sign-up" />}
-              size="lg"
-              className="h-11 px-6 text-sm"
+            <Link
+              href="/sign-up"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "h-11 px-6 text-sm"
+              )}
             >
               Start your free trial
               <ArrowRight data-icon="inline-end" className="size-4" />
-            </Button>
-            <Button
-              render={<a href="#features" />}
-              variant="outline"
-              size="lg"
-              className="h-11 px-6 text-sm"
+            </Link>
+            <a
+              href="#features"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "h-11 px-6 text-sm"
+              )}
             >
               See how it works
-            </Button>
+            </a>
           </div>
 
           <p className="mt-5 text-xs text-muted-foreground/70">
