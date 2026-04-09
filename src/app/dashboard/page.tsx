@@ -1,9 +1,7 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getCurrentUserOrganizations } from "@/lib/auth";
 
 export default async function DashboardPage() {
-  const user = await currentUser();
   const orgs = await getCurrentUserOrganizations();
 
   if (orgs.length === 0) {
