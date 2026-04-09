@@ -1,4 +1,4 @@
-export { contactPreferenceEnum, membershipRoleEnum, teamStaffRoleEnum, relationshipTypeEnum, messageTargetTypeEnum, messageChannelEnum, deliveryChannelEnum, deliveryStatusEnum, eventTypeEnum, reminderTypeEnum, formTypeEnum, formAssignmentTypeEnum, formSubmissionStatusEnum, interestSubmissionStatusEnum } from "./enums";
+export { contactPreferenceEnum, membershipRoleEnum, teamStaffRoleEnum, relationshipTypeEnum, messageTargetTypeEnum, messageChannelEnum, deliveryChannelEnum, deliveryStatusEnum, eventTypeEnum, reminderTypeEnum, formTypeEnum, formAssignmentTypeEnum, formSubmissionStatusEnum, interestSubmissionStatusEnum, paymentTypeEnum, paymentStatusEnum } from "./enums";
 export { organizations } from "./organizations";
 export { seasons } from "./seasons";
 export { sports } from "./sports";
@@ -19,3 +19,5 @@ export { forms } from "./forms";
 export { formAssignments } from "./form-assignments";
 export { formSubmissions } from "./form-submissions";
 export { interestSubmissions } from "./interest-submissions";
+export { paymentItems } from "./payment-items";
+export { payments } from "./payments";

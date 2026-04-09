@@ -87,3 +87,17 @@ export const interestSubmissionStatusEnum = pgEnum(
   "interest_submission_status",
   ["new", "contacted", "enrolled", "declined"],
 );
+
+export const paymentTypeEnum = pgEnum("payment_type", [
+  "fee",
+  "donation",
+  "sponsorship",
+  "registration",
+]);
+
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending",
+  "completed",
+  "failed",
+  "refunded",
+]);
