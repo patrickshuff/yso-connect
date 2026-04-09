@@ -84,11 +84,6 @@ export function PhoneSignUp() {
       return;
     }
 
-    if (signUp.status !== "complete") {
-      setError("Verification incomplete. Please try again.");
-      return;
-    }
-
     const { error: finalizeErr } = await signUp.finalize();
     if (finalizeErr) {
       setError(finalizeErr.message);
