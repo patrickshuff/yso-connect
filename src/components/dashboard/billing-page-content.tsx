@@ -193,8 +193,8 @@ export function BillingPageContent({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
-                <p className="text-4xl font-bold">$10</p>
-                <p className="text-sm text-muted-foreground">for 6 months</p>
+                <p className="text-4xl font-bold">$5</p>
+                <p className="text-sm text-muted-foreground">per month</p>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export function BillingPageContent({
                 onClick={handleUpgrade}
                 disabled={loading}
               >
-                {loading ? "Redirecting..." : "Upgrade for $10"}
+                {loading ? "Redirecting..." : "Subscribe for $5/mo"}
               </Button>
             </CardContent>
           </Card>

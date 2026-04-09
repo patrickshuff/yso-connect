@@ -35,7 +35,7 @@ export function Hero() {
                 "h-11 px-6 text-sm"
               )}
             >
-              Start your free trial
+              Set up your team — free
               <ArrowRight data-icon="inline-end" className="size-4" />
             </Link>
             <a

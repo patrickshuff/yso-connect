@@ -23,16 +23,19 @@ export async function createCoachCheckoutSession(
   const origin = headersList.get("origin") ?? "http://localhost:3000";
 
   const session = await stripe.checkout.sessions.create({
-    mode: "payment",
+    mode: "subscription",
     line_items: [
       {
         price_data: {
           currency: "usd",
           product_data: {
             name: "YSO Connect Coach Plan",
-            description: "6 months of full dashboard access",
+            description: "Monthly dashboard access",
           },
-          unit_amount: 1000,
+          unit_amount: 500,
+          recurring: {
+            interval: "month",
+          },
         },
         quantity: 1,
       },
