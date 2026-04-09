@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSignIn } from "@clerk/nextjs";
+import { useSignIn, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -35,6 +35,7 @@ function toE164(formatted: string): string {
 export function PhoneSignIn() {
   const router = useRouter();
   const { signIn, fetchStatus } = useSignIn();
+  const { setActive } = useClerk();
 
   const [step, setStep] = useState<Step>("phone");
   const [displayPhone, setDisplayPhone] = useState("");
@@ -88,6 +89,10 @@ export function PhoneSignIn() {
     if (finalizeErr) {
       setError(finalizeErr.message);
       return;
+    }
+
+    if (signIn.createdSessionId) {
+      await setActive({ session: signIn.createdSessionId });
     }
 
     router.push("/dashboard");
