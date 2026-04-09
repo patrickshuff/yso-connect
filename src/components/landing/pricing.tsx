@@ -85,25 +85,42 @@ function PricingTier({
   );
 }
 
-const tiers: PricingTierProps[] = [
+const coachTier: PricingTierProps = {
+  name: "Per Team",
+  price: "$5",
+  period: "/month",
+  description: "For individual coaches managing a single team. Free for 30 days.",
+  features: [
+    "Full roster management",
+    "SMS + email messaging",
+    "Game and practice schedule",
+    "Automated reminders",
+    "Digital forms and signatures",
+    "No credit card to start",
+  ],
+  highlighted: true,
+  cta: "Start free — no card required",
+  ctaHref: "/sign-up",
+};
+
+const orgTiers: PricingTierProps[] = [
   {
-    name: "Small",
+    name: "Small Org",
     price: "$199",
     period: "/year",
-    description: "For small leagues and single-team organizations.",
+    description: "For small leagues with a handful of teams.",
     features: [
       "Up to 50 players",
-      "Unlimited guardians per player",
-      "SMS + email messaging",
-      "Automated reminders",
-      "Digital forms and signatures",
+      "Unlimited teams",
+      "Everything coaches get",
       "Public org page",
+      "Interest signup forms",
     ],
     cta: "Start free trial",
     ctaHref: "/sign-up",
   },
   {
-    name: "Starter",
+    name: "Starter Org",
     price: "$999",
     period: "/year",
     description: "For single-sport organizations ready to grow.",
@@ -114,15 +131,14 @@ const tiers: PricingTierProps[] = [
       "Custom branding",
       "Advanced analytics",
     ],
-    highlighted: true,
     cta: "Start free trial",
     ctaHref: "/sign-up",
   },
   {
-    name: "Growth",
+    name: "Growth Org",
     price: "$1,999",
     period: "/year",
-    description: "For growing organizations with multiple sports or seasons.",
+    description: "For multi-sport organizations with multiple seasons.",
     features: [
       "Up to 500 players",
       "Everything in Starter",
@@ -147,13 +163,22 @@ export function Pricing() {
             Simple, transparent pricing
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Annual plans that scale with your organization. Every plan includes
-            a 30-day free trial.
+            No sales calls. No hidden fees. Start free, upgrade when you need to.
           </p>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3">
-          {tiers.map((tier) => (
+        <div className="mx-auto mt-12 max-w-md">
+          <PricingTier {...coachTier} />
+        </div>
+
+        <div className="mx-auto mt-6 max-w-2xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Running an entire organization?
+          </p>
+        </div>
+
+        <div className="mx-auto mt-6 grid max-w-5xl gap-6 lg:grid-cols-3">
+          {orgTiers.map((tier) => (
             <PricingTier key={tier.name} {...tier} />
           ))}
         </div>
