@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSignUp, useClerk } from "@clerk/nextjs";
+import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -35,7 +35,6 @@ function toE164(formatted: string): string {
 export function PhoneSignUp() {
   const router = useRouter();
   const { signUp, fetchStatus } = useSignUp();
-  const { setActive } = useClerk();
 
   const [step, setStep] = useState<Step>("phone");
   const [displayPhone, setDisplayPhone] = useState("");
@@ -85,11 +84,24 @@ export function PhoneSignUp() {
       return;
     }
 
-    if (signUp.createdSessionId) {
-      await setActive({ session: signUp.createdSessionId });
+    if (signUp.status !== "complete") {
+      setError("Sign-up incomplete. Please try again.");
+      return;
     }
 
-    router.push("/dashboard");
+    const { error: finalizeErr } = await signUp.finalize({
+      navigate: ({ decorateUrl }) => {
+        const url = decorateUrl("/dashboard");
+        if (url.startsWith("http")) {
+          window.location.href = url;
+        } else {
+          router.push(url);
+        }
+      },
+    });
+    if (finalizeErr) {
+      setError(finalizeErr.message);
+    }
   }
 
   return (
@@ -118,6 +130,7 @@ export function PhoneSignUp() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
+            <div id="clerk-captcha" />
             <Button type="submit" disabled={loading || !displayPhone}>
               {loading ? "Sending…" : "Send code"}
             </Button>

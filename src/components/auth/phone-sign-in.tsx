@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSignIn, useClerk } from "@clerk/nextjs";
+import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -35,7 +35,6 @@ function toE164(formatted: string): string {
 export function PhoneSignIn() {
   const router = useRouter();
   const { signIn, fetchStatus } = useSignIn();
-  const { setActive } = useClerk();
 
   const [step, setStep] = useState<Step>("phone");
   const [displayPhone, setDisplayPhone] = useState("");
@@ -85,17 +84,24 @@ export function PhoneSignIn() {
       return;
     }
 
-    const { error: finalizeErr } = await signIn.finalize();
-    if (finalizeErr) {
-      setError(finalizeErr.message);
+    if (signIn.status !== "complete") {
+      setError("Sign-in incomplete. Please try again.");
       return;
     }
 
-    if (signIn.createdSessionId) {
-      await setActive({ session: signIn.createdSessionId });
+    const { error: finalizeErr } = await signIn.finalize({
+      navigate: ({ decorateUrl }) => {
+        const url = decorateUrl("/dashboard");
+        if (url.startsWith("http")) {
+          window.location.href = url;
+        } else {
+          router.push(url);
+        }
+      },
+    });
+    if (finalizeErr) {
+      setError(finalizeErr.message);
     }
-
-    router.push("/dashboard");
   }
 
   return (
