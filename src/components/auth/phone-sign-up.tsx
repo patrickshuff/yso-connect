@@ -84,12 +84,6 @@ export function PhoneSignUp() {
       return;
     }
 
-    const { error: finalizeErr } = await signUp.finalize();
-    if (finalizeErr) {
-      setError(finalizeErr.message);
-      return;
-    }
-
     router.push("/dashboard");
   }
 
