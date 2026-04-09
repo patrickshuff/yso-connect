@@ -110,10 +110,12 @@ export default async function OrgOverviewPage({
               Add Player
             </Button>
           </Link>
-          <Button variant="outline" disabled>
-            <Upload className="size-4" data-icon="inline-start" />
-            Import Roster
-          </Button>
+          <Link href={`/dashboard/${orgId}/import`}>
+            <Button variant="outline">
+              <Upload className="size-4" data-icon="inline-start" />
+              Import Roster
+            </Button>
+          </Link>
         </div>
       </div>
 

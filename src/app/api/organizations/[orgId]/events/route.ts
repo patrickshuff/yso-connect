@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { db } from "@/db";
-import { events } from "@/db/schema";
+import { events, teams } from "@/db/schema";
 import { requireOrgRole } from "@/lib/auth";
+import { createDefaultReminders } from "@/lib/reminders";
 
 type RouteParams = { params: Promise<{ orgId: string }> };
 
@@ -50,6 +51,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     );
   }
 
+  if (body.teamId) {
+    const [team] = await db
+      .select({ id: teams.id })
+      .from(teams)
+      .where(and(eq(teams.id, body.teamId), eq(teams.organizationId, orgId)));
+
+    if (!team) {
+      return NextResponse.json(
+        { error: "Team not found in this organization" },
+        { status: 400 },
+      );
+    }
+  }
+
+  const startTime = new Date(body.startTime);
+
   const [event] = await db
     .insert(events)
     .values({
@@ -59,11 +76,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       description: body.description ?? null,
       eventType: body.eventType,
       location: body.location ?? null,
-      startTime: new Date(body.startTime),
+      startTime,
       endTime: new Date(body.endTime),
       isAllDay: body.isAllDay ?? false,
     })
     .returning();
+
+  await createDefaultReminders(event.id, startTime);
 
   return NextResponse.json(event, { status: 201 });
 }

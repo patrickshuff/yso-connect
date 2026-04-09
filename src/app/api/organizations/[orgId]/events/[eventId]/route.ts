@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
-import { events } from "@/db/schema";
+import { events, teams } from "@/db/schema";
 import { requireOrgRole } from "@/lib/auth";
 
 type RouteParams = { params: Promise<{ orgId: string; eventId: string }> };
@@ -58,6 +58,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       { error: "No valid fields to update" },
       { status: 400 },
     );
+  }
+
+  if (typeof updates.teamId === "string") {
+    const [team] = await db
+      .select({ id: teams.id })
+      .from(teams)
+      .where(and(eq(teams.id, updates.teamId), eq(teams.organizationId, orgId)));
+
+    if (!team) {
+      return NextResponse.json(
+        { error: "Team not found in this organization" },
+        { status: 400 },
+      );
+    }
   }
 
   updates.updatedAt = new Date();

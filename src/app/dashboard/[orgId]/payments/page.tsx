@@ -1,3 +1,6 @@
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { organizations } from "@/db/schema";
 import { getPaymentItems, getPayments } from "./actions";
 import { CreatePaymentDialog } from "@/components/dashboard/create-payment-dialog";
 import { PaymentItemsList } from "@/components/dashboard/payment-items-list";
@@ -9,9 +12,10 @@ export default async function PaymentsPage({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const [items, paymentRows] = await Promise.all([
+  const [items, paymentRows, [org]] = await Promise.all([
     getPaymentItems(orgId),
     getPayments(orgId),
+    db.select({ slug: organizations.slug }).from(organizations).where(eq(organizations.id, orgId)),
   ]);
 
   return (
@@ -28,7 +32,7 @@ export default async function PaymentsPage({
         <CreatePaymentDialog orgId={orgId} />
       </div>
 
-      <PaymentItemsList orgId={orgId} items={items} />
+      <PaymentItemsList orgSlug={org.slug} items={items} />
 
       <div>
         <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">

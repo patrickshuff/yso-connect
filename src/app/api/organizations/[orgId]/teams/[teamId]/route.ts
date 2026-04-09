@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
-import { teams } from "@/db/schema";
+import { teams, seasons, divisions } from "@/db/schema";
 import { requireOrgRole } from "@/lib/auth";
 
 type RouteParams = { params: Promise<{ orgId: string; teamId: string }> };
@@ -42,6 +42,34 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       { error: "No valid fields to update" },
       { status: 400 },
     );
+  }
+
+  if (typeof updates.seasonId === "string") {
+    const [season] = await db
+      .select({ id: seasons.id })
+      .from(seasons)
+      .where(and(eq(seasons.id, updates.seasonId), eq(seasons.organizationId, orgId)));
+
+    if (!season) {
+      return NextResponse.json(
+        { error: "Season not found in this organization" },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (typeof updates.divisionId === "string") {
+    const [division] = await db
+      .select({ id: divisions.id })
+      .from(divisions)
+      .where(and(eq(divisions.id, updates.divisionId), eq(divisions.organizationId, orgId)));
+
+    if (!division) {
+      return NextResponse.json(
+        { error: "Division not found in this organization" },
+        { status: 400 },
+      );
+    }
   }
 
   updates.updatedAt = new Date();

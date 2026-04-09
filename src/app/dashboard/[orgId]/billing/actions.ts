@@ -45,6 +45,12 @@ export async function createCoachCheckoutSession(
       orgId,
       userId,
     },
+    subscription_data: {
+      metadata: {
+        orgId,
+        userId,
+      },
+    },
     success_url: `${origin}/dashboard/${orgId}/billing?success=true`,
     cancel_url: `${origin}/dashboard/${orgId}/billing?canceled=true`,
   });

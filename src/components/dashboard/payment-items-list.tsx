@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { PaymentItemRow } from "@/app/dashboard/[orgId]/payments/actions";
 
 interface PaymentItemsListProps {
-  orgId: string;
+  orgSlug: string;
   items: PaymentItemRow[];
 }
 
@@ -25,7 +25,7 @@ function formatCents(cents: number, currency: string): string {
   }).format(cents / 100);
 }
 
-export function PaymentItemsList({ orgId, items }: PaymentItemsListProps) {
+export function PaymentItemsList({ orgSlug, items }: PaymentItemsListProps) {
   if (items.length === 0) {
     return (
       <Card>
@@ -68,7 +68,7 @@ export function PaymentItemsList({ orgId, items }: PaymentItemsListProps) {
               size="sm"
               className="w-full"
               onClick={() => {
-                const url = `${window.location.origin}/o/${orgId}/pay/${item.id}`;
+                const url = `${window.location.origin}/o/${orgSlug}/pay/${item.id}`;
                 navigator.clipboard.writeText(url);
               }}
             >

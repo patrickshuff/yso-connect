@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
-import { teams } from "@/db/schema";
+import { teams, seasons, divisions } from "@/db/schema";
 import { requireOrgRole } from "@/lib/auth";
 
 export async function GET(
@@ -34,6 +34,32 @@ export async function POST(
       { error: "name and seasonId are required" },
       { status: 400 },
     );
+  }
+
+  const [season] = await db
+    .select({ id: seasons.id })
+    .from(seasons)
+    .where(and(eq(seasons.id, body.seasonId), eq(seasons.organizationId, orgId)));
+
+  if (!season) {
+    return NextResponse.json(
+      { error: "Season not found in this organization" },
+      { status: 400 },
+    );
+  }
+
+  if (body.divisionId) {
+    const [division] = await db
+      .select({ id: divisions.id })
+      .from(divisions)
+      .where(and(eq(divisions.id, body.divisionId), eq(divisions.organizationId, orgId)));
+
+    if (!division) {
+      return NextResponse.json(
+        { error: "Division not found in this organization" },
+        { status: 400 },
+      );
+    }
   }
 
   const [team] = await db

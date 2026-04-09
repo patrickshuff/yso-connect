@@ -7,10 +7,19 @@ import {
   messages,
   messageDeliveries,
   communicationPreferences,
+  smsConsents,
 } from "@/db/schema";
 import { sendSMS } from "@/lib/sms";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 type MessageChannel = "sms" | "email" | "both";
 type TargetType = "team" | "organization" | "custom";
@@ -130,11 +139,36 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
   const rawRecipients = await resolveRecipients(orgId, targetType, targetId);
   const recipients = await applyPreferences(orgId, rawRecipients);
 
+  // Load active SMS consents for this org to enforce TCPA
+  const activeConsents = await db
+    .select({ phone: smsConsents.phoneNumber, revokedAt: smsConsents.revokedAt })
+    .from(smsConsents)
+    .where(
+      and(
+        eq(smsConsents.organizationId, orgId),
+        eq(smsConsents.consentGiven, true),
+      ),
+    );
+  const consentedPhones = new Set(
+    activeConsents
+      .filter((c) => c.revokedAt === null)
+      .map((c) => c.phone.replace(/\D/g, "")),
+  );
+
   let deliveryCount = 0;
 
   for (const guardian of recipients) {
-    const shouldSendSMS = (channel === "sms" || channel === "both") && guardian.smsOptIn && guardian.phone;
+    const phoneDigits = guardian.phone?.replace(/\D/g, "") ?? "";
+    const hasConsent = consentedPhones.has(phoneDigits);
+    const shouldSendSMS = (channel === "sms" || channel === "both") && guardian.smsOptIn && guardian.phone && hasConsent;
     const shouldSendEmail = (channel === "email" || channel === "both") && guardian.emailOptIn && guardian.email;
+
+    if ((channel === "sms" || channel === "both") && guardian.smsOptIn && guardian.phone && !hasConsent) {
+      logger.warn("Skipping SMS - no TCPA consent", {
+        guardianId: guardian.id,
+        phone: guardian.phone,
+      });
+    }
 
     if (shouldSendSMS && guardian.phone) {
       const [delivery] = await db
@@ -173,8 +207,8 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
         .returning();
 
       const htmlBody = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-${subject ? `<h2>${subject}</h2>` : ""}
-<p>${body.replace(/\n/g, "<br>")}</p>
+${subject ? `<h2>${escapeHtml(subject)}</h2>` : ""}
+<p>${escapeHtml(body).replace(/\n/g, "<br>")}</p>
 </div>`;
 
       const result = await sendEmail(guardian.email, subject ?? "Message from your organization", htmlBody);
