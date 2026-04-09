@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { organizations } from "@/db/schema";
 import { getMembership } from "@/lib/memberships";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { BillingGate } from "@/components/dashboard/billing-gate";
 
 export default async function OrgDashboardLayout({
   children,
@@ -36,7 +37,14 @@ export default async function OrgDashboardLayout({
 
   return (
     <DashboardShell orgId={orgId} orgName={org.name}>
-      {children}
+      <BillingGate
+        orgId={orgId}
+        subscriptionStatus={org.subscriptionStatus}
+        trialEndsAt={org.trialEndsAt?.toISOString() ?? null}
+        subscriptionPaidUntil={org.subscriptionPaidUntil?.toISOString() ?? null}
+      >
+        {children}
+      </BillingGate>
     </DashboardShell>
   );
 }

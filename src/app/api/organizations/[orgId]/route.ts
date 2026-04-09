@@ -7,9 +7,9 @@ import { getMembership } from "@/lib/memberships";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ orgId: string }> },
 ) {
-  const { id } = await params;
+  const { orgId: id } = await params;
   const authResult = await getAuthUserId();
   if ("error" in authResult) return authResult.error;
 
@@ -38,9 +38,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ orgId: string }> },
 ) {
-  const { id } = await params;
+  const { orgId: id } = await params;
   const roleResult = await requireOrgRole(id, "admin");
   if ("error" in roleResult) return roleResult.error;
 
@@ -89,9 +89,9 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ orgId: string }> },
 ) {
-  const { id } = await params;
+  const { orgId: id } = await params;
   const roleResult = await requireOrgRole(id, "owner");
   if ("error" in roleResult) return roleResult.error;
 

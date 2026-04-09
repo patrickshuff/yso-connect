@@ -13,6 +13,7 @@ import {
   FileText,
   Inbox,
   MessageSquare,
+  Receipt,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ const navItems = [
   { label: "Payments", href: "/payments", icon: CreditCard },
   { label: "Forms", href: "/forms", icon: FileText },
   { label: "Seasons", href: "/seasons", icon: Calendar },
+  { label: "Billing", href: "/billing", icon: Receipt },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

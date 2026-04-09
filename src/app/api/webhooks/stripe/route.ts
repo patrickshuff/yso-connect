@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/db";
-import { payments } from "@/db/schema";
+import { payments, organizations } from "@/db/schema";
 import type Stripe from "stripe";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -47,6 +48,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
 ): Promise<void> {
+  const metadataType = session.metadata?.type;
+
+  if (metadataType === "coach_billing") {
+    await handleCoachBillingPayment(session);
+    return;
+  }
+
   const organizationId = session.metadata?.organizationId;
   const paymentItemId = session.metadata?.paymentItemId;
 
@@ -69,4 +77,25 @@ async function handleCheckoutCompleted(
     payerName: session.customer_details?.name ?? "Unknown",
     payerEmail: session.customer_details?.email ?? null,
   });
+}
+
+async function handleCoachBillingPayment(
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  const orgId = session.metadata?.orgId;
+  if (!orgId) {
+    return;
+  }
+
+  const paidUntil = new Date();
+  paidUntil.setMonth(paidUntil.getMonth() + 6);
+
+  await db
+    .update(organizations)
+    .set({
+      subscriptionStatus: "active",
+      subscriptionPaidUntil: paidUntil,
+      updatedAt: new Date(),
+    })
+    .where(eq(organizations.id, orgId));
 }

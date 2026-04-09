@@ -1,4 +1,5 @@
 import { index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { subscriptionStatusEnum } from "./enums";
 
 export const organizations = pgTable("organizations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -10,6 +11,9 @@ export const organizations = pgTable("organizations", {
   contactEmail: varchar("contact_email", { length: 255 }),
   contactPhone: varchar("contact_phone", { length: 50 }),
   timezone: varchar("timezone", { length: 100 }).notNull().default("America/New_York"),
+  trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  subscriptionStatus: subscriptionStatusEnum("subscription_status").notNull().default("trial"),
+  subscriptionPaidUntil: timestamp("subscription_paid_until", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 }, (table) => [

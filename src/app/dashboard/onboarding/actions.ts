@@ -28,6 +28,9 @@ export async function createOrganization(formData: FormData): Promise<CreateOrgR
     return { success: false, error: "Name and slug are required" };
   }
 
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+
   const [org] = await db
     .insert(organizations)
     .values({
@@ -37,6 +40,8 @@ export async function createOrganization(formData: FormData): Promise<CreateOrgR
       contactEmail: contactEmail || null,
       contactPhone: contactPhone || null,
       timezone,
+      trialEndsAt,
+      subscriptionStatus: "trial",
     })
     .returning();
 
