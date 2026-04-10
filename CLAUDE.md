@@ -32,3 +32,9 @@ Multi-tenant youth sports organization platform.
 - Drizzle ORM with postgres driver
 - Run migrations: `npx drizzle-kit push`
 - Generate migrations: `npx drizzle-kit generate`
+
+## Discord Monitoring
+- Patrick's Discord channel must be checked every 5 minutes during active sessions
+- Use the discord fetch_messages tool to poll for new messages
+- If any messages are addressed to the bot (@bot), respond immediately
+- Do not let messages sit unread for more than 5 minutes

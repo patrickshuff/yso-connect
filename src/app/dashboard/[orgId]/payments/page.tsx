@@ -12,11 +12,16 @@ export default async function PaymentsPage({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const [items, paymentRows, [org]] = await Promise.all([
+  const [items, paymentRows, orgRows] = await Promise.all([
     getPaymentItems(orgId),
     getPayments(orgId),
     db.select({ slug: organizations.slug }).from(organizations).where(eq(organizations.id, orgId)),
   ]);
+
+  const org = orgRows[0];
+  if (!org) {
+    return <div className="p-8 text-center text-muted-foreground">Organization not found.</div>;
+  }
 
   return (
     <div className="space-y-8">

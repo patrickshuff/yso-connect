@@ -5,7 +5,6 @@ import { submitGeneralSmsConsent } from "@/app/consent/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
 
@@ -86,11 +85,12 @@ export function GeneralSmsConsentForm() {
           </div>
 
           <div className="flex items-start gap-3">
-            <Checkbox
+            <input
+              type="checkbox"
               id="consentChecked"
               name="consentChecked"
               required
-              className="mt-0.5"
+              className="mt-1 h-4 w-4 rounded border border-input accent-primary"
             />
             <Label
               htmlFor="consentChecked"

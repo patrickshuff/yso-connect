@@ -6,6 +6,7 @@ import { organizations, sports } from "@/db/schema";
 import { OrgHeader } from "@/components/public/org-header";
 import { OrgFooter } from "@/components/public/org-footer";
 import { InterestForm } from "@/components/public/interest-form";
+import { FunnelPageView } from "@/components/analytics/funnel-page-view";
 
 async function getOrgBySlug(slug: string) {
   const [org] = await db
@@ -61,6 +62,7 @@ export default async function SignupPage({
     <>
       <OrgHeader orgName={org.name} slug={slug} />
       <main className="flex-1">
+        <FunnelPageView organizationSlug={slug} location="org_signup_page" />
         <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">

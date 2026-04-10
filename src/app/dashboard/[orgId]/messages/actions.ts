@@ -85,6 +85,11 @@ interface MessageRow {
 }
 
 export async function getMessages(orgId: string): Promise<MessageRow[]> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "guardian");
+
   const rows = await db
     .select({
       id: messages.id,

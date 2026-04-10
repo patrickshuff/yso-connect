@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   guardians,
@@ -13,6 +13,7 @@ import {
 import { sendSMS } from "@/lib/sms";
 import { sendEmail } from "@/lib/email";
 import { buildBroadcastEmail } from "@/lib/email-templates";
+import { buildUnsubscribeUrl } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
 
 type MessageChannel = "sms" | "email" | "both";
@@ -29,6 +30,88 @@ interface Guardian {
 interface GuardianWithPreferences extends Guardian {
   smsOptIn: boolean;
   emailOptIn: boolean;
+}
+
+interface DeliveryStats {
+  attempted: number;
+  sent: number;
+  failed: number;
+}
+
+interface RecipientProcessingResult {
+  attempts: number;
+  sms: DeliveryStats;
+  email: DeliveryStats;
+  skippedSmsNoConsent: number;
+}
+
+const DEFAULT_DELIVERY_CONCURRENCY = 20;
+
+function getDeliveryConcurrency(): number {
+  const raw = process.env.MESSAGE_DELIVERY_CONCURRENCY;
+  const parsed = raw ? Number.parseInt(raw, 10) : DEFAULT_DELIVERY_CONCURRENCY;
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return DEFAULT_DELIVERY_CONCURRENCY;
+  }
+  return Math.min(parsed, 100);
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+
+  const safeConcurrency = Math.max(1, Math.min(concurrency, items.length));
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+
+  await Promise.all(
+    Array.from({ length: safeConcurrency }, async () => {
+      while (true) {
+        const current = cursor;
+        cursor += 1;
+        if (current >= items.length) return;
+        results[current] = await worker(items[current], current);
+      }
+    }),
+  );
+
+  return results;
+}
+
+async function createPendingDelivery(
+  messageId: string,
+  guardianId: string,
+  channel: "sms" | "email",
+): Promise<string> {
+  const [delivery] = await db
+    .insert(messageDeliveries)
+    .values({
+      messageId,
+      guardianId,
+      channel,
+      status: "pending",
+    })
+    .returning({ id: messageDeliveries.id });
+
+  return delivery.id;
+}
+
+async function finalizeDelivery(
+  deliveryId: string,
+  status: "sent" | "failed",
+  externalId: string | null,
+): Promise<void> {
+  await db
+    .update(messageDeliveries)
+    .set({
+      status,
+      externalId,
+      sentAt: status === "sent" ? new Date() : null,
+    })
+    .where(eq(messageDeliveries.id, deliveryId));
 }
 
 export async function resolveRecipients(
@@ -78,10 +161,16 @@ async function applyPreferences(
 ): Promise<GuardianWithPreferences[]> {
   if (recipients.length === 0) return [];
 
+  const recipientIds = recipients.map((recipient) => recipient.id);
   const prefs = await db
     .select()
     .from(communicationPreferences)
-    .where(eq(communicationPreferences.organizationId, orgId));
+    .where(
+      and(
+        eq(communicationPreferences.organizationId, orgId),
+        inArray(communicationPreferences.guardianId, recipientIds),
+      ),
+    );
 
   const prefMap = new Map(prefs.map((p) => [p.guardianId, p]));
 
@@ -113,6 +202,7 @@ interface SendMessageResult {
 
 export async function sendMessage(params: SendMessageParams): Promise<SendMessageResult> {
   const { orgId, senderId, targetType, targetId, subject, body, channel } = params;
+  const startedAt = Date.now();
 
   // Create message record
   const [message] = await db
@@ -156,103 +246,136 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
       .map((c) => c.phone.replace(/\D/g, "")),
   );
 
-  let deliveryCount = 0;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
+  const deliveryConcurrency = getDeliveryConcurrency();
+  const channelAllowsSms = channel === "sms" || channel === "both";
+  const channelAllowsEmail = channel === "email" || channel === "both";
 
-  for (const guardian of recipients) {
-    const phoneDigits = guardian.phone?.replace(/\D/g, "") ?? "";
-    const hasConsent = consentedPhones.has(phoneDigits);
-    const shouldSendSMS = (channel === "sms" || channel === "both") && guardian.smsOptIn && guardian.phone && hasConsent;
-    const shouldSendEmail = (channel === "email" || channel === "both") && guardian.emailOptIn && guardian.email;
+  const perRecipientResults = await mapWithConcurrency(
+    recipients,
+    deliveryConcurrency,
+    async (guardian): Promise<RecipientProcessingResult> => {
+      const sms: DeliveryStats = { attempted: 0, sent: 0, failed: 0 };
+      const email: DeliveryStats = { attempted: 0, sent: 0, failed: 0 };
+      let attempts = 0;
+      let skippedSmsNoConsent = 0;
 
-    if ((channel === "sms" || channel === "both") && guardian.smsOptIn && guardian.phone && !hasConsent) {
-      logger.warn("Skipping SMS - no TCPA consent", {
-        guardianId: guardian.id,
-        phone: guardian.phone,
-      });
-    }
+      const phoneDigits = guardian.phone?.replace(/\D/g, "") ?? "";
+      const hasConsent = consentedPhones.has(phoneDigits);
+      const shouldSendSMS = channelAllowsSms && guardian.smsOptIn && guardian.phone && hasConsent;
+      const shouldSendEmail = channelAllowsEmail && guardian.emailOptIn && guardian.email;
 
-    if (shouldSendSMS && guardian.phone) {
-      const [delivery] = await db
-        .insert(messageDeliveries)
-        .values({
+      if (channelAllowsSms && guardian.smsOptIn && guardian.phone && !hasConsent) {
+        skippedSmsNoConsent = 1;
+        logger.warn("Skipping SMS - no TCPA consent", {
           messageId: message.id,
           guardianId: guardian.id,
-          channel: "sms",
-          status: "pending",
-        })
-        .returning();
+          phone: guardian.phone,
+        });
+      }
 
-      const result = await sendSMS(guardian.phone, body);
+      if (shouldSendSMS && guardian.phone) {
+        sms.attempted += 1;
+        attempts += 1;
 
-      await db
-        .update(messageDeliveries)
-        .set({
-          status: result.success ? "sent" : "failed",
-          externalId: result.success ? result.sid : null,
-          sentAt: result.success ? new Date() : null,
-        })
-        .where(eq(messageDeliveries.id, delivery.id));
+        const deliveryId = await createPendingDelivery(message.id, guardian.id, "sms");
+        const result = await sendSMS(guardian.phone, body);
 
-      deliveryCount++;
-    }
+        if (result.success) {
+          sms.sent += 1;
+          await finalizeDelivery(deliveryId, "sent", result.sid);
+        } else {
+          sms.failed += 1;
+          await finalizeDelivery(deliveryId, "failed", null);
+        }
+      }
 
-    if (shouldSendEmail && guardian.email) {
-      const [delivery] = await db
-        .insert(messageDeliveries)
-        .values({
-          messageId: message.id,
+      if (shouldSendEmail && guardian.email) {
+        email.attempted += 1;
+        attempts += 1;
+
+        const deliveryId = await createPendingDelivery(message.id, guardian.id, "email");
+        const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardian.id);
+        const htmlBody = buildBroadcastEmail({
+          orgName,
+          subject,
+          body,
+          appUrl,
           guardianId: guardian.id,
-          channel: "email",
-          status: "pending",
-        })
-        .returning();
+        });
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
-      const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardian.id}`;
-      const htmlBody = buildBroadcastEmail({
-        orgName,
-        subject,
-        body,
-        appUrl,
-        guardianId: guardian.id,
-      });
+        const result = await sendEmail(
+          guardian.email,
+          subject ?? "Message from your organization",
+          htmlBody,
+          {
+            "List-Unsubscribe": `<${unsubscribeUrl}>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
+        );
 
-      const result = await sendEmail(
-        guardian.email,
-        subject ?? "Message from your organization",
-        htmlBody,
-        {
-          "List-Unsubscribe": `<${unsubscribeUrl}>`,
-          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-        },
-      );
+        if (result.success) {
+          email.sent += 1;
+          await finalizeDelivery(deliveryId, "sent", result.id);
+        } else {
+          email.failed += 1;
+          await finalizeDelivery(deliveryId, "failed", null);
+        }
+      }
 
-      await db
-        .update(messageDeliveries)
-        .set({
-          status: result.success ? "sent" : "failed",
-          externalId: result.success ? result.id : null,
-          sentAt: result.success ? new Date() : null,
-        })
-        .where(eq(messageDeliveries.id, delivery.id));
+      return {
+        attempts,
+        sms,
+        email,
+        skippedSmsNoConsent,
+      };
+    },
+  );
 
-      deliveryCount++;
-    }
-  }
+  const summary = perRecipientResults.reduce(
+    (acc, result) => {
+      acc.deliveryCount += result.attempts;
+      acc.sms.attempted += result.sms.attempted;
+      acc.sms.sent += result.sms.sent;
+      acc.sms.failed += result.sms.failed;
+      acc.email.attempted += result.email.attempted;
+      acc.email.sent += result.email.sent;
+      acc.email.failed += result.email.failed;
+      acc.skippedSmsNoConsent += result.skippedSmsNoConsent;
+      return acc;
+    },
+    {
+      deliveryCount: 0,
+      sms: { attempted: 0, sent: 0, failed: 0 },
+      email: { attempted: 0, sent: 0, failed: 0 },
+      skippedSmsNoConsent: 0,
+    },
+  );
+
+  const durationMs = Date.now() - startedAt;
 
   logger.info("Message sent", {
     messageId: message.id,
     targetType,
     targetId,
     channel,
+    deliveryConcurrency,
+    durationMs,
     recipientCount: recipients.length,
-    deliveryCount,
+    deliveryCount: summary.deliveryCount,
+    smsAttempted: summary.sms.attempted,
+    smsSent: summary.sms.sent,
+    smsFailed: summary.sms.failed,
+    emailAttempted: summary.email.attempted,
+    emailSent: summary.email.sent,
+    emailFailed: summary.email.failed,
+    skippedSmsNoConsent: summary.skippedSmsNoConsent,
   });
 
   return {
     messageId: message.id,
     recipientCount: recipients.length,
-    deliveryCount,
+    deliveryCount: summary.deliveryCount,
   };
 }
 

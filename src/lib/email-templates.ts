@@ -1,3 +1,5 @@
+import { buildUnsubscribeUrl } from "@/lib/unsubscribe-token";
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -88,7 +90,7 @@ export interface WelcomeEmailParams {
 
 export function buildWelcomeEmail(params: WelcomeEmailParams): string {
   const { firstName, orgName, appUrl, guardianId } = params;
-  const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardianId}`;
+  const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardianId);
   const loginUrl = `${appUrl}/sign-in`;
 
   const header = standardHeader(orgName);
@@ -143,7 +145,7 @@ export interface BroadcastEmailParams {
 
 export function buildBroadcastEmail(params: BroadcastEmailParams): string {
   const { orgName, subject, body, appUrl, guardianId } = params;
-  const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardianId}`;
+  const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardianId);
 
   const header = standardHeader(orgName);
 

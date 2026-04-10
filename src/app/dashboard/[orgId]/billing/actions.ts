@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { getStripe } from "@/lib/stripe";
+import { requireRole } from "@/lib/memberships";
 
 interface CheckoutResult {
   success: boolean;
@@ -17,6 +18,9 @@ export async function createCoachCheckoutSession(
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }
+
+  // Verify caller is at least an admin in this org before creating billing session
+  await requireRole(orgId, userId, "admin");
 
   const stripe = getStripe();
   const headersList = await headers();

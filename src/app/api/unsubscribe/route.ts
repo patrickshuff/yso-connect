@@ -3,11 +3,27 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { guardians, communicationPreferences } from "@/db/schema";
 import { logger } from "@/lib/logger";
+import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token";
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 export async function GET(request: NextRequest) {
   const guardianId = request.nextUrl.searchParams.get("g");
+  const token = request.nextUrl.searchParams.get("t");
 
-  if (!guardianId) {
+  if (!guardianId || !token) {
+    return new NextResponse("Invalid unsubscribe link.", { status: 400 });
+  }
+
+  // Verify HMAC token before any DB lookup to prevent enumeration
+  if (!verifyUnsubscribeToken(guardianId, token)) {
     return new NextResponse("Invalid unsubscribe link.", { status: 400 });
   }
 
@@ -17,7 +33,8 @@ export async function GET(request: NextRequest) {
     .where(eq(guardians.id, guardianId));
 
   if (!guardian) {
-    return new NextResponse("Invalid unsubscribe link.", { status: 404 });
+    // Return same message as invalid token to prevent enumeration
+    return new NextResponse("Invalid unsubscribe link.", { status: 400 });
   }
 
   // Upsert communication preferences with emailOptIn = false
@@ -53,7 +70,7 @@ export async function GET(request: NextRequest) {
   <body>
     <div class="card">
       <h1>You've been unsubscribed</h1>
-      <p>Hi ${guardian.firstName}, you'll no longer receive email updates. You can still receive SMS messages if you're opted in.</p>
+      <p>Hi ${escapeHtml(guardian.firstName)}, you'll no longer receive email updates. You can still receive SMS messages if you're opted in.</p>
     </div>
   </body>
 </html>`,

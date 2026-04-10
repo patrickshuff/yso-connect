@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { organizations, seasons, sports } from "@/db/schema";
-import { createMembership } from "@/lib/memberships";
+import { createMembership, requireRole } from "@/lib/memberships";
 
 interface CreateOrgResult {
   success: boolean;
@@ -71,6 +71,8 @@ export async function createSeason(formData: FormData): Promise<CreateSeasonResu
     return { success: false, error: "All fields are required" };
   }
 
+  await requireRole(orgId, userId, "admin");
+
   const [season] = await db
     .insert(seasons)
     .values({
@@ -100,6 +102,8 @@ export async function addSports(orgId: string, sportNames: string[]): Promise<Ad
   if (!orgId || sportNames.length === 0) {
     return { success: false, error: "Organization ID and at least one sport are required" };
   }
+
+  await requireRole(orgId, userId, "admin");
 
   const inserted = await db
     .insert(sports)

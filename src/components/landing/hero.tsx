@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackFunnelEvent } from "@/lib/gtm";
 
 export function Hero() {
   return (
@@ -34,6 +37,11 @@ export function Hero() {
                 buttonVariants({ size: "lg" }),
                 "h-11 px-6 text-sm"
               )}
+              onClick={() =>
+                trackFunnelEvent("funnel_landing_cta_click", {
+                  location: "landing_hero_primary",
+                })
+              }
             >
               Set up your team — free
               <ArrowRight data-icon="inline-end" className="size-4" />

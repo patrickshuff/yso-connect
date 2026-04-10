@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StepIndicator } from "@/components/onboarding/step-indicator";
 import { createOrganization, createSeason, addSports } from "./actions";
+import { trackFunnelEvent } from "@/lib/gtm";
 
 const STEP_LABELS = ["Organization", "Season", "Sports", "Done"];
 
@@ -85,6 +86,11 @@ export default function OnboardingPage() {
     }
 
     setOrgId(result.orgId ?? null);
+    trackFunnelEvent("funnel_org_activation", {
+      organizationId: result.orgId,
+      organizationSlug: orgSlug,
+      location: "onboarding_step_organization",
+    });
     setCurrentStep(2);
   };
 

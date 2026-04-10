@@ -15,6 +15,20 @@
       "when": 1775700109201,
       "tag": "0001_dashing_thunderbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775846100000,
+      "tag": "0002_funnel_kpi",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775850699144,
+      "tag": "0003_fast_lilith",
+      "breakpoints": true
     }
   ]
 }

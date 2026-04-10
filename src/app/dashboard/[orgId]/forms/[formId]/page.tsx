@@ -38,8 +38,8 @@ export default async function FormDetailPage({
 
   const [form, assignments, submissions, orgTeams, orgPlayers] = await Promise.all([
     getFormDetail(orgId, formId),
-    getFormAssignments(formId),
-    getFormSubmissions(formId),
+    getFormAssignments(orgId, formId),
+    getFormSubmissions(orgId, formId),
     getOrgTeams(orgId),
     getOrgPlayers(orgId),
   ]);

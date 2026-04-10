@@ -8,6 +8,7 @@ import { guardians, organizations } from "@/db/schema";
 import { requireRole } from "@/lib/memberships";
 import { sendEmail } from "@/lib/email";
 import { buildWelcomeEmail } from "@/lib/email-templates";
+import { buildUnsubscribeUrl } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
 
 interface CreateGuardianResult {
@@ -66,7 +67,7 @@ export async function createGuardian(
 
         const orgName = org?.name ?? "Your Organization";
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
-        const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardian.id}`;
+        const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardian.id);
 
         const htmlBody = buildWelcomeEmail({
           firstName: guardian.firstName,

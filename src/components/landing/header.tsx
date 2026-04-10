@@ -12,6 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { trackFunnelEvent } from "@/lib/gtm";
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -63,7 +64,15 @@ export function Header() {
             </a>
           ))}
           <div className="ml-3">
-            <Link href="/sign-up" className={buttonVariants({ size: "sm" })}>
+            <Link
+              href="/sign-up"
+              className={buttonVariants({ size: "sm" })}
+              onClick={() =>
+                trackFunnelEvent("funnel_landing_cta_click", {
+                  location: "landing_header_desktop",
+                })
+              }
+            >
               Get Started
             </Link>
           </div>
@@ -96,7 +105,14 @@ export function Header() {
                   <Link
                     href="/sign-up"
                     className={cn(buttonVariants({ size: "lg" }), "w-full")}
-                    onClick={() => setOpen(false)}
+                    onClick={() =>
+                      {
+                        trackFunnelEvent("funnel_landing_cta_click", {
+                          location: "landing_header_mobile",
+                        });
+                        setOpen(false);
+                      }
+                    }
                   >
                     Get Started
                   </Link>

@@ -108,7 +108,22 @@ function formatReminderTime(startTime: Date): string {
 }
 
 /**
- * Send reminder notification and mark as sent.
+ * Atomically claim a reminder by setting sent=true only if still unsent.
+ * Returns true if this call claimed it, false if already sent (another run got it first).
+ */
+async function claimReminder(reminderId: string): Promise<boolean> {
+  const result = await db
+    .update(reminders)
+    .set({ sent: true, sentAt: new Date() })
+    .where(and(eq(reminders.id, reminderId), eq(reminders.sent, false)))
+    .returning({ id: reminders.id });
+
+  return result.length > 0;
+}
+
+/**
+ * Send reminder notification with idempotent claim-before-send pattern.
+ * Returns true if processed, false if skipped (already claimed by another run).
  */
 export async function processReminder(
   reminderId: string,
@@ -122,17 +137,23 @@ export async function processReminder(
     startTime: Date;
     isCancelled: boolean;
   },
-): Promise<void> {
+): Promise<boolean> {
+  // Atomically claim the reminder first — prevents double-send
+  const claimed = await claimReminder(reminderId);
+  if (!claimed) {
+    logger.info("Reminder already claimed by another run", {
+      reminderId,
+      eventId: event.id,
+    });
+    return false;
+  }
+
   if (event.isCancelled) {
-    await db
-      .update(reminders)
-      .set({ sent: true, sentAt: new Date() })
-      .where(eq(reminders.id, reminderId));
     logger.info("Skipped reminder for cancelled event", {
       reminderId,
       eventId: event.id,
     });
-    return;
+    return true;
   }
 
   const timeStr = formatReminderTime(event.startTime);
@@ -165,10 +186,10 @@ export async function processReminder(
       eventId: event.id,
       error: error instanceof Error ? error.message : String(error),
     });
+    // Note: reminder stays claimed (sent=true) to prevent retry storms.
+    // A separate recovery mechanism should handle failed sends if needed.
+    throw error;
   }
 
-  await db
-    .update(reminders)
-    .set({ sent: true, sentAt: new Date() })
-    .where(eq(reminders.id, reminderId));
+  return true;
 }

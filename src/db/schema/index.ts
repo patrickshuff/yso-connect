@@ -19,6 +19,8 @@ export { forms } from "./forms";
 export { formAssignments } from "./form-assignments";
 export { formSubmissions } from "./form-submissions";
 export { interestSubmissions } from "./interest-submissions";
+export { funnelEvents } from "./funnel-events";
 export { paymentItems } from "./payment-items";
 export { payments } from "./payments";
 export { smsConsents } from "./sms-consents";
+export { cronRuns } from "./cron-runs";

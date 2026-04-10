@@ -21,6 +21,13 @@ export async function submitInterestForm(
   const childAgeRaw = formData.get("childAge") as string | null;
   const sportInterest = formData.get("sportInterest") as string | null;
   const message = formData.get("message") as string | null;
+  const utmSource = formData.get("utmSource") as string | null;
+  const utmMedium = formData.get("utmMedium") as string | null;
+  const utmCampaign = formData.get("utmCampaign") as string | null;
+  const utmTerm = formData.get("utmTerm") as string | null;
+  const utmContent = formData.get("utmContent") as string | null;
+  const referrer = formData.get("referrer") as string | null;
+  const landingPage = formData.get("landingPage") as string | null;
 
   if (!slug || !parentName || !parentEmail) {
     return { success: false, error: "Name and email are required." };
@@ -47,6 +54,13 @@ export async function submitInterestForm(
     childAge: childAge && !isNaN(childAge) ? childAge : null,
     sportInterest: sportInterest || null,
     message: message || null,
+    utmSource: utmSource || null,
+    utmMedium: utmMedium || null,
+    utmCampaign: utmCampaign || null,
+    utmTerm: utmTerm || null,
+    utmContent: utmContent || null,
+    referrer: referrer || null,
+    landingPage: landingPage || null,
   });
 
   return { success: true, error: null };

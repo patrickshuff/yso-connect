@@ -142,10 +142,13 @@ export async function generateMetadata({
 
 export default async function OrgLandingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
   const org = await getOrgBySlug(slug);
 
   if (!org) {
@@ -159,6 +162,18 @@ export default async function OrgLandingPage({
       getOrgSports(org.id),
       getOrgTeams(org.id),
     ]);
+  const signupQuery = new URLSearchParams();
+  for (const [key, value] of Object.entries(resolvedSearchParams)) {
+    if (typeof value === "string") {
+      signupQuery.set(key, value);
+    } else if (Array.isArray(value) && value.length > 0) {
+      signupQuery.set(key, value[0]);
+    }
+  }
+  if (!signupQuery.has("landing_page")) {
+    signupQuery.set("landing_page", `/o/${slug}`);
+  }
+  const signupHref = `/o/${slug}/signup?${signupQuery.toString()}`;
 
   return (
     <>
@@ -217,7 +232,7 @@ export default async function OrgLandingPage({
                 )}
               </div>
               <div className="mt-8 flex justify-center gap-3">
-                <Button render={<Link href={`/o/${slug}/signup`} />} size="lg">
+                <Button render={<Link href={signupHref} />} size="lg">
                   Join This Organization
                 </Button>
                 <Button

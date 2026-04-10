@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { trackFunnelEvent } from "@/lib/gtm";
 
 interface OrgHeaderProps {
   orgName: string;
@@ -7,6 +11,14 @@ interface OrgHeaderProps {
 }
 
 export function OrgHeader({ orgName, slug }: OrgHeaderProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const signupParams = new URLSearchParams(searchParams.toString());
+  if (!signupParams.has("landing_page")) {
+    signupParams.set("landing_page", pathname);
+  }
+  const signupHref = `/o/${slug}/signup?${signupParams.toString()}`;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-lg">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -46,7 +58,20 @@ export function OrgHeader({ orgName, slug }: OrgHeaderProps) {
             Schedule
           </Link>
           <div className="ml-3">
-            <Button render={<Link href={`/o/${slug}/signup`} />} size="sm">
+            <Button
+              render={
+                <Link
+                  href={signupHref}
+                  onClick={() =>
+                    trackFunnelEvent("funnel_landing_cta_click", {
+                      organizationSlug: slug,
+                      location: "org_header_join",
+                    })
+                  }
+                />
+              }
+              size="sm"
+            >
               Join Us
             </Button>
           </div>
