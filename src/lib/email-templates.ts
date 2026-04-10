@@ -55,7 +55,7 @@ export function buildCTAButton(label: string, href: string): string {
   return `<table cellpadding="0" cellspacing="0" style="margin:28px 0 0;">
   <tr>
     <td style="background-color:${BRAND_BLUE};border-radius:6px;">
-      <a href="${href}"
+      <a href="${escapeHtml(href)}"
          style="display:inline-block;padding:12px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;"
       >${escapeHtml(label)}</a>
     </td>
