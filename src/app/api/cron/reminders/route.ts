@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
 
     for (const { reminder, event } of dueReminders) {
       try {
-        const wasSent = await processReminder(reminder.id, event);
-        if (wasSent) processed++;
+        await processReminder(reminder.id, event);
+        processed++;
       } catch (error) {
         failed++;
         logger.error("Failed to process reminder", {
