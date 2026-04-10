@@ -1,0 +1,136 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "YSO Connect" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e10]: YSO Connect
+      - navigation [ref=e11]:
+        - link "Features" [ref=e12] [cursor=pointer]:
+          - /url: "#features"
+        - link "Pricing" [ref=e13] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Get Started" [ref=e15] [cursor=pointer]:
+          - /url: /sign-up
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - heading "Privacy Policy" [level=1] [ref=e18]
+      - paragraph [ref=e19]: "Effective Date: April 8, 2026"
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - heading "1. Introduction" [level=2] [ref=e22]
+          - paragraph [ref=e23]: YSO Connect ("we," "us," or "our") provides a communication and management platform for youth sports organizations. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services at ysoconnect.com.
+        - generic [ref=e24]:
+          - heading "2. Information We Collect" [level=2] [ref=e25]
+          - paragraph [ref=e26]: "We collect information that you provide directly to us, including:"
+          - list [ref=e27]:
+            - listitem [ref=e28]:
+              - strong [ref=e29]: "Account Information:"
+              - text: Name, email address, and password when you create an account.
+            - listitem [ref=e30]:
+              - strong [ref=e31]: "Phone Numbers:"
+              - text: Mobile phone numbers provided for SMS communications about team activities.
+            - listitem [ref=e32]:
+              - strong [ref=e33]: "Player Information:"
+              - text: Player names, ages, and team assignments provided by parents/guardians or organization administrators.
+            - listitem [ref=e34]:
+              - strong [ref=e35]: "Payment Information:"
+              - text: Billing details processed through our payment provider for registration fees and other organization charges.
+            - listitem [ref=e36]:
+              - strong [ref=e37]: "Usage Data:"
+              - text: Information about how you interact with our services, including IP addresses, browser type, and pages visited.
+        - generic [ref=e38]:
+          - heading "3. How We Use Your Information" [level=2] [ref=e39]
+          - list [ref=e40]:
+            - listitem [ref=e41]: Sending SMS and email notifications about team schedules, practice changes, game updates, and cancellations.
+            - listitem [ref=e42]: Managing organization memberships, rosters, and team assignments.
+            - listitem [ref=e43]: Processing registration fees and payments.
+            - listitem [ref=e44]: Providing customer support and responding to inquiries.
+            - listitem [ref=e45]: Improving our services and developing new features.
+            - listitem [ref=e46]: Ensuring the security and integrity of our platform.
+        - generic [ref=e47]:
+          - heading "4. Third-Party Services" [level=2] [ref=e48]
+          - paragraph [ref=e49]: "We use the following third-party services to operate our platform:"
+          - list [ref=e50]:
+            - listitem [ref=e51]:
+              - strong [ref=e52]: Twilio
+              - text: for sending SMS text messages.
+            - listitem [ref=e53]:
+              - strong [ref=e54]: Resend
+              - text: for sending email communications.
+            - listitem [ref=e55]:
+              - strong [ref=e56]: Stripe
+              - text: for processing payments securely. We do not store credit card numbers on our servers.
+            - listitem [ref=e57]:
+              - strong [ref=e58]: Clerk
+              - text: for user authentication and account management.
+          - paragraph [ref=e59]: Each of these providers maintains their own privacy policies governing their handling of your data.
+        - generic [ref=e60]:
+          - heading "5. Data Retention" [level=2] [ref=e61]
+          - paragraph [ref=e62]: We retain your personal information for as long as your account is active or as needed to provide you services. We will retain and use your information as necessary to comply with our legal obligations, resolve disputes, and enforce our agreements. SMS consent records are retained for a minimum of five years as required by applicable regulations.
+        - generic [ref=e63]:
+          - heading "6. Children's Privacy (COPPA)" [level=2] [ref=e64]
+          - paragraph [ref=e65]:
+            - text: YSO Connect is designed for use by parents, guardians, and organization administrators — not by children directly. We do not knowingly collect personal information from children under 13. All player information is provided by and managed through parent/guardian accounts. If you believe a child under 13 has provided us personal information directly, please contact us at
+            - link "support@ysoconnect.com" [ref=e66] [cursor=pointer]:
+              - /url: mailto:support@ysoconnect.com
+            - text: so we can promptly remove it.
+        - generic [ref=e67]:
+          - heading "7. Your Rights" [level=2] [ref=e68]
+          - paragraph [ref=e69]: "You have the right to:"
+          - list [ref=e70]:
+            - listitem [ref=e71]:
+              - strong [ref=e72]: Access
+              - text: the personal information we hold about you.
+            - listitem [ref=e73]:
+              - strong [ref=e74]: Correct
+              - text: any inaccurate or incomplete personal information.
+            - listitem [ref=e75]:
+              - strong [ref=e76]: Delete
+              - text: your personal information, subject to legal retention requirements.
+            - listitem [ref=e77]:
+              - strong [ref=e78]: Opt out
+              - text: of SMS messages at any time by replying STOP to any message, or by contacting us directly.
+            - listitem [ref=e79]:
+              - strong [ref=e80]: Opt out
+              - text: of marketing emails by using the unsubscribe link in any email.
+        - generic [ref=e81]:
+          - heading "8. Data Security" [level=2] [ref=e82]
+          - paragraph [ref=e83]: We implement appropriate technical and organizational security measures to protect your personal information, including encryption in transit (TLS) and at rest. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.
+        - generic [ref=e84]:
+          - heading "9. Changes to This Policy" [level=2] [ref=e85]
+          - paragraph [ref=e86]: We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the "Effective Date" above.
+        - generic [ref=e87]:
+          - heading "10. Contact Us" [level=2] [ref=e88]
+          - paragraph [ref=e89]: "If you have questions about this Privacy Policy or wish to exercise your rights, please contact us at:"
+          - paragraph [ref=e90]:
+            - link "support@ysoconnect.com" [ref=e91] [cursor=pointer]:
+              - /url: mailto:support@ysoconnect.com
+        - paragraph [ref=e93]:
+          - text: See also our
+          - link "Terms of Service" [ref=e94] [cursor=pointer]:
+            - /url: /terms
+          - text: and
+          - link "SMS Consent" [ref=e95] [cursor=pointer]:
+            - /url: /consent
+          - text: pages.
+  - contentinfo [ref=e96]:
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - img [ref=e101]
+        - generic [ref=e105]: YSO Connect
+      - navigation [ref=e106]:
+        - link "Features" [ref=e107] [cursor=pointer]:
+          - /url: "#features"
+        - link "Pricing" [ref=e108] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Sign In" [ref=e109] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Privacy Policy" [ref=e110] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms of Service" [ref=e111] [cursor=pointer]:
+          - /url: /terms
+        - link "SMS Consent" [ref=e112] [cursor=pointer]:
+          - /url: /consent
+      - paragraph [ref=e113]: © 2026 YSO Connect. All rights reserved.
+  - alert [ref=e114]

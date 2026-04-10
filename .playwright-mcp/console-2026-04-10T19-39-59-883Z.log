@@ -1,0 +1,47 @@
+[     132ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3333/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3333%2Fapi%2Fanalytics%2Ffunnel:0
+[     180ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     192ms] [LOG] [HMR] connected @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     281ms] Error: @clerk/react: useClerkSignal can only be used within the <ClerkProvider /> component. Learn more: https://clerk.com/docs/components/clerk-provider
+    at Object.throwMissingClerkProviderError (http://localhost:3333/_next/static/chunks/node_modules_0tn1__j._.js:660:19)
+    at useAssertWrappedByClerkProvider.useSharedAssertWrappedByClerkProvider (http://localhost:3333/_next/static/chunks/node_modules_0tn1__j._.js:8002:26)
+    at useAssertWrappedByClerkProvider (http://localhost:3333/_next/static/chunks/node_modules_0tn1__j._.js:4706:13)
+    at useAssertWrappedByClerkProvider (http://localhost:3333/_next/static/chunks/node_modules_0tn1__j._.js:8000:215)
+    at useClerkSignal (http://localhost:3333/_next/static/chunks/node_modules_0tn1__j._.js:9882:206)
+    at useSignIn (http://localhost:3333/_next/static/chunks/node_modules_0tn1__j._.js:9954:12)
+    at PhoneSignIn (http://localhost:3333/_next/static/chunks/src_0kk3nin._.js:312:232)
+    at Object.react_stack_bottom_frame (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6665:639)
+    at runWithFiberInDEV (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3333/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[    5101ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    6617ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    6727ms] [LOG] [Fast Refresh] done in 1648ms @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7044ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7128ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7135ms] [LOG] [HMR] connected @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    7380ms] [WARNING] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   10640ms] [WARNING] The resource http://localhost:3333/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3333/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3333%2Fapi%2Fanalytics%2Ffunnel:0
+[   10640ms] [WARNING] The resource http://localhost:3333/_next/static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3333/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3333%2Fapi%2Fanalytics%2Ffunnel:0
+[   58412ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   58421ms] [LOG] [Fast Refresh] done in 110ms @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   62498ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   62817ms] [LOG] [Fast Refresh] done in 34ms @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   63106ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   63130ms] [LOG] [Fast Refresh] done in 125ms @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   63740ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   63758ms] [LOG] [Fast Refresh] done in 120ms @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   66151ms] [WARNING] The resource http://localhost:3333/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3333/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3333%2Fapi%2Fanalytics%2Ffunnel:0
+[   66151ms] [WARNING] The resource http://localhost:3333/_next/static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3333/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3333%2Fapi%2Fanalytics%2Ffunnel:0
+[   66782ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   66813ms] [LOG] [Fast Refresh] done in 60ms @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   85531ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   85577ms] [LOG] [Fast Refresh] done in 113ms @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  146649ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  146678ms] [LOG] [Fast Refresh] done in 79ms @ http://localhost:3333/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431

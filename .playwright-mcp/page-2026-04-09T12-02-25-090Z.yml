@@ -1,0 +1,213 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "YSO Connect" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e10]: YSO Connect
+      - navigation [ref=e11]:
+        - link "Features" [ref=e12] [cursor=pointer]:
+          - /url: "#features"
+        - link "Pricing" [ref=e13] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Get Started" [ref=e15] [cursor=pointer]:
+          - /url: /sign-up
+  - main [ref=e16]:
+    - generic [ref=e20]:
+      - generic [ref=e21]: Built for youth sports organizations
+      - heading "Replace the chaos with clarity" [level=1] [ref=e23]
+      - paragraph [ref=e24]: No more group texts that nobody reads, email chains that lose parents, or paper forms that vanish. YSO Connect gives your organization one place to reach every guardian, every time.
+      - generic [ref=e25]:
+        - link "Set up your team — free" [ref=e26] [cursor=pointer]:
+          - /url: /sign-up
+          - text: Set up your team — free
+          - img
+        - link "See how it works" [ref=e27] [cursor=pointer]:
+          - /url: "#features"
+      - paragraph [ref=e28]: No credit card required. Set up in under 10 minutes.
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - paragraph [ref=e32]: The problem
+        - heading "Communication shouldn't be this hard" [level=2] [ref=e33]
+        - paragraph [ref=e34]: Running a youth sports org means juggling dozens of families across multiple teams. The tools you use today were never built for this.
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - img [ref=e38]
+          - generic [ref=e40]:
+            - heading "Group texts that lose people" [level=3] [ref=e41]
+            - paragraph [ref=e42]: Parents mute the chat, new families never get added, and critical updates get buried under reply-all chaos.
+        - generic [ref=e43]:
+          - img [ref=e45]
+          - generic [ref=e50]:
+            - heading "Emails that go nowhere" [level=3] [ref=e51]
+            - paragraph [ref=e52]: Outdated distribution lists, bounced addresses, and no way to know who actually read the schedule change.
+        - generic [ref=e53]:
+          - img [ref=e55]
+          - generic [ref=e58]:
+            - heading "Paper forms that vanish" [level=3] [ref=e59]
+            - paragraph [ref=e60]: Waivers stuffed in bags, medical forms lost between seasons, and hours wasted chasing down missing signatures.
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - paragraph [ref=e64]: Features
+        - heading "Everything your organization needs" [level=2] [ref=e65]
+        - paragraph [ref=e66]: Purpose-built for youth sports. Not a generic messaging app with a baseball skin on it.
+      - generic [ref=e67]:
+        - generic [ref=e69]:
+          - img [ref=e71]
+          - generic [ref=e76]: Roster-based messaging
+          - generic [ref=e77]: Message every guardian on a team with one click. SMS and email delivered together, tied to your live roster. No threads, no noise.
+        - generic [ref=e79]:
+          - img [ref=e81]
+          - generic [ref=e84]: Multi-guardian contacts
+          - generic [ref=e85]: Mom, dad, grandpa, carpool parent -- every contact per player in one place. Divorced families handled gracefully, no duplicates.
+        - generic [ref=e87]:
+          - img [ref=e89]
+          - generic [ref=e92]: Automated reminders
+          - generic [ref=e93]: Game and practice reminders go out automatically based on your schedule. Parents get the right info at the right time, every time.
+        - generic [ref=e95]:
+          - img [ref=e97]
+          - generic [ref=e101]: Digital forms and signatures
+          - generic [ref=e102]: Waivers, medical forms, and registrations collected digitally. Track who has signed and send reminders to those who haven't.
+        - generic [ref=e104]:
+          - img [ref=e106]
+          - generic [ref=e109]: Public org pages
+          - generic [ref=e110]: A clean, professional landing page for your organization with schedules, announcements, and registration links. No website builder needed.
+        - generic [ref=e112]:
+          - img [ref=e114]
+          - generic [ref=e116]: Simple payments
+          - generic [ref=e117]: Collect registration fees, uniform payments, and fundraiser contributions. Track who's paid and send gentle nudges to those who haven't.
+    - generic [ref=e119]:
+      - generic [ref=e120]:
+        - paragraph [ref=e121]: Pricing
+        - heading "Simple, transparent pricing" [level=2] [ref=e122]
+        - paragraph [ref=e123]: No sales calls. No hidden fees. Start free, upgrade when you need to.
+      - generic [ref=e125]:
+        - generic [ref=e127]: Most popular
+        - generic [ref=e128]:
+          - generic [ref=e129]: Per Team
+          - generic [ref=e130]: For individual coaches managing a single team. Free for 30 days.
+          - generic [ref=e131]:
+            - generic [ref=e132]: $5
+            - generic [ref=e133]: /month
+        - generic [ref=e134]:
+          - list [ref=e135]:
+            - listitem [ref=e136]:
+              - img [ref=e137]
+              - generic [ref=e139]: Full roster management
+            - listitem [ref=e140]:
+              - img [ref=e141]
+              - generic [ref=e143]: SMS + email messaging
+            - listitem [ref=e144]:
+              - img [ref=e145]
+              - generic [ref=e147]: Game and practice schedule
+            - listitem [ref=e148]:
+              - img [ref=e149]
+              - generic [ref=e151]: Automated reminders
+            - listitem [ref=e152]:
+              - img [ref=e153]
+              - generic [ref=e155]: Digital forms and signatures
+            - listitem [ref=e156]:
+              - img [ref=e157]
+              - generic [ref=e159]: No credit card to start
+          - link "Start free — no card required" [ref=e161] [cursor=pointer]:
+            - /url: /sign-up
+      - paragraph [ref=e163]: Running an entire organization?
+      - generic [ref=e164]:
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - generic [ref=e167]: Small Org
+            - generic [ref=e168]: For small leagues with a handful of teams.
+            - generic [ref=e169]:
+              - generic [ref=e170]: $199
+              - generic [ref=e171]: /year
+          - generic [ref=e172]:
+            - list [ref=e173]:
+              - listitem [ref=e174]:
+                - img [ref=e175]
+                - generic [ref=e177]: Up to 50 players
+              - listitem [ref=e178]:
+                - img [ref=e179]
+                - generic [ref=e181]: Unlimited teams
+              - listitem [ref=e182]:
+                - img [ref=e183]
+                - generic [ref=e185]: Everything coaches get
+              - listitem [ref=e186]:
+                - img [ref=e187]
+                - generic [ref=e189]: Public org page
+              - listitem [ref=e190]:
+                - img [ref=e191]
+                - generic [ref=e193]: Interest signup forms
+            - link "Start free trial" [ref=e195] [cursor=pointer]:
+              - /url: /sign-up
+        - generic [ref=e196]:
+          - generic [ref=e197]:
+            - generic [ref=e198]: Starter Org
+            - generic [ref=e199]: For single-sport organizations ready to grow.
+            - generic [ref=e200]:
+              - generic [ref=e201]: $999
+              - generic [ref=e202]: /year
+          - generic [ref=e203]:
+            - list [ref=e204]:
+              - listitem [ref=e205]:
+                - img [ref=e206]
+                - generic [ref=e208]: Up to 200 players
+              - listitem [ref=e209]:
+                - img [ref=e210]
+                - generic [ref=e212]: Everything in Small
+              - listitem [ref=e213]:
+                - img [ref=e214]
+                - generic [ref=e216]: Payment collection
+              - listitem [ref=e217]:
+                - img [ref=e218]
+                - generic [ref=e220]: Custom branding
+              - listitem [ref=e221]:
+                - img [ref=e222]
+                - generic [ref=e224]: Advanced analytics
+            - link "Start free trial" [ref=e226] [cursor=pointer]:
+              - /url: /sign-up
+        - generic [ref=e227]:
+          - generic [ref=e228]:
+            - generic [ref=e229]: Growth Org
+            - generic [ref=e230]: For multi-sport organizations with multiple seasons.
+            - generic [ref=e231]:
+              - generic [ref=e232]: $1,999
+              - generic [ref=e233]: /year
+          - generic [ref=e234]:
+            - list [ref=e235]:
+              - listitem [ref=e236]:
+                - img [ref=e237]
+                - generic [ref=e239]: Up to 500 players
+              - listitem [ref=e240]:
+                - img [ref=e241]
+                - generic [ref=e243]: Everything in Starter
+              - listitem [ref=e244]:
+                - img [ref=e245]
+                - generic [ref=e247]: Priority support
+              - listitem [ref=e248]:
+                - img [ref=e249]
+                - generic [ref=e251]: API access
+              - listitem [ref=e252]:
+                - img [ref=e253]
+                - generic [ref=e255]: Dedicated account manager
+            - link "Start free trial" [ref=e257] [cursor=pointer]:
+              - /url: /sign-up
+  - contentinfo [ref=e258]:
+    - generic [ref=e260]:
+      - generic [ref=e261]:
+        - img [ref=e263]
+        - generic [ref=e267]: YSO Connect
+      - navigation [ref=e268]:
+        - link "Features" [ref=e269] [cursor=pointer]:
+          - /url: "#features"
+        - link "Pricing" [ref=e270] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Sign In" [ref=e271] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Privacy Policy" [ref=e272] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms of Service" [ref=e273] [cursor=pointer]:
+          - /url: /terms
+        - link "SMS Consent" [ref=e274] [cursor=pointer]:
+          - /url: /consent
+      - paragraph [ref=e275]: © 2026 YSO Connect. All rights reserved.
+  - alert [ref=e276]

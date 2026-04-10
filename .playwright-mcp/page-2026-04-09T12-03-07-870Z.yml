@@ -1,0 +1,58 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "YSO Connect" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e10]: YSO Connect
+      - navigation [ref=e11]:
+        - link "Features" [ref=e12] [cursor=pointer]:
+          - /url: "#features"
+        - link "Pricing" [ref=e13] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Get Started" [ref=e15] [cursor=pointer]:
+          - /url: /sign-up
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - heading "SMS Text Message Consent" [level=1] [ref=e19]
+        - paragraph [ref=e20]: Opt in to receive text message updates from YSO Connect and affiliated youth sports organizations.
+      - generic [ref=e21]:
+        - generic [ref=e23]: SMS Consent
+        - generic [ref=e25]:
+          - generic [ref=e26]: By providing your phone number and checking the box below, you consent to receive text messages from YSO Connect and affiliated youth sports organizations regarding team activities, game and practice schedules, cancellations, and important updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out at any time. Reply HELP for help.
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - text: Phone Number
+              - generic [ref=e29]: "*"
+            - textbox "Phone Number *" [ref=e30]:
+              - /placeholder: (555) 123-4567
+          - generic [ref=e31]:
+            - generic [ref=e32]: Parent/Guardian Name (optional)
+            - textbox "Parent/Guardian Name (optional)" [ref=e33]:
+              - /placeholder: Jane Smith
+          - generic [ref=e34]:
+            - checkbox "I agree to receive text messages from YSO Connect and affiliated youth sports organizations as described above." [ref=e35]
+            - checkbox [ref=e36]
+            - generic [ref=e37] [cursor=pointer]: I agree to receive text messages from YSO Connect and affiliated youth sports organizations as described above.
+          - button "Give Consent" [ref=e38]
+  - contentinfo [ref=e39]:
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - img [ref=e44]
+        - generic [ref=e48]: YSO Connect
+      - navigation [ref=e49]:
+        - link "Features" [ref=e50] [cursor=pointer]:
+          - /url: "#features"
+        - link "Pricing" [ref=e51] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Sign In" [ref=e52] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Privacy Policy" [ref=e53] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms of Service" [ref=e54] [cursor=pointer]:
+          - /url: /terms
+        - link "SMS Consent" [ref=e55] [cursor=pointer]:
+          - /url: /consent
+      - paragraph [ref=e56]: © 2026 YSO Connect. All rights reserved.
+  - alert [ref=e57]
