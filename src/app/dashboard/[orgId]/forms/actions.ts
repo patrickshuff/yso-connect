@@ -15,6 +15,7 @@ import {
   teamPlayers,
 } from "@/db/schema";
 import { requireRole } from "@/lib/memberships";
+import { validateLength, validateEnum, MAX_LENGTHS, VALID_FORM_TYPES } from "@/lib/validation";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -93,24 +94,30 @@ export async function createForm(
 
   await requireRole(orgId, userId, "admin");
 
-  const title = formData.get("title") as string | null;
-  const description = (formData.get("description") as string | null) || null;
-  const formType = formData.get("formType") as FormType | null;
-  const content = formData.get("content") as string | null;
-  const requiresSignature = formData.get("requiresSignature") === "on";
+  const titleResult = validateLength(formData.get("title") as string | null, MAX_LENGTHS.title);
+  if (!titleResult.valid) return { success: false, error: `Title: ${titleResult.error}` };
 
-  if (!title || !formType || !content) {
-    return { success: false, error: "Title, type, and content are required" };
+  const formTypeResult = validateEnum(formData.get("formType") as string | null, VALID_FORM_TYPES);
+  if (!formTypeResult.valid) return { success: false, error: `Form type: ${formTypeResult.error}` };
+
+  const contentResult = validateLength(formData.get("content") as string | null, MAX_LENGTHS.content);
+  if (!contentResult.valid) return { success: false, error: `Content: ${contentResult.error}` };
+
+  const descRaw = (formData.get("description") as string | null)?.trim() || null;
+  if (descRaw && descRaw.length > MAX_LENGTHS.description) {
+    return { success: false, error: `Description exceeds ${MAX_LENGTHS.description} characters` };
   }
+
+  const requiresSignature = formData.get("requiresSignature") === "on";
 
   const [form] = await db
     .insert(forms)
     .values({
       organizationId: orgId,
-      title,
-      description,
-      formType,
-      content,
+      title: titleResult.value,
+      description: descRaw,
+      formType: formTypeResult.value,
+      content: contentResult.value,
       requiresSignature,
     })
     .returning();
@@ -143,6 +150,16 @@ export async function assignForm(
 
   if (assignmentType !== "organization" && !assignmentTargetId) {
     return { success: false, error: "Target is required for team/player assignments" };
+  }
+
+  // Verify the form belongs to this org before creating the assignment
+  const [ownedForm] = await db
+    .select({ id: forms.id })
+    .from(forms)
+    .where(and(eq(forms.id, formId), eq(forms.organizationId, orgId)));
+
+  if (!ownedForm) {
+    return { success: false, error: "Form not found" };
   }
 
   const [assignment] = await db
@@ -186,6 +203,22 @@ export async function submitForm(
 
   if (!acknowledged) {
     return { success: false, error: "You must acknowledge the form" };
+  }
+
+  // Verify the assignment belongs to the form and org
+  const [validAssignment] = await db
+    .select({ id: formAssignments.id })
+    .from(formAssignments)
+    .where(
+      and(
+        eq(formAssignments.id, assignmentId),
+        eq(formAssignments.formId, formId),
+        eq(formAssignments.organizationId, orgId),
+      ),
+    );
+
+  if (!validAssignment) {
+    return { success: false, error: "Invalid form assignment" };
   }
 
   // Verify the guardian belongs to this org and is linked to the current user
@@ -247,27 +280,33 @@ export async function updateForm(
     return { success: false, error: "Form not found" };
   }
 
-  const title = formData.get("title") as string | null;
-  const description = (formData.get("description") as string | null) || null;
-  const formType = formData.get("formType") as FormType | null;
-  const content = formData.get("content") as string | null;
-  const requiresSignature = formData.get("requiresSignature") === "on";
+  const titleResult = validateLength(formData.get("title") as string | null, MAX_LENGTHS.title);
+  if (!titleResult.valid) return { success: false, error: `Title: ${titleResult.error}` };
 
-  if (!title || !formType || !content) {
-    return { success: false, error: "Title, type, and content are required" };
+  const formTypeResult = validateEnum(formData.get("formType") as string | null, VALID_FORM_TYPES);
+  if (!formTypeResult.valid) return { success: false, error: `Form type: ${formTypeResult.error}` };
+
+  const contentResult = validateLength(formData.get("content") as string | null, MAX_LENGTHS.content);
+  if (!contentResult.valid) return { success: false, error: `Content: ${contentResult.error}` };
+
+  const descRaw = (formData.get("description") as string | null)?.trim() || null;
+  if (descRaw && descRaw.length > MAX_LENGTHS.description) {
+    return { success: false, error: `Description exceeds ${MAX_LENGTHS.description} characters` };
   }
+
+  const requiresSignature = formData.get("requiresSignature") === "on";
 
   await db
     .update(forms)
     .set({
-      title,
-      description,
-      formType,
-      content,
+      title: titleResult.value,
+      description: descRaw,
+      formType: formTypeResult.value,
+      content: contentResult.value,
       requiresSignature,
       updatedAt: new Date(),
     })
-    .where(eq(forms.id, formId));
+    .where(and(eq(forms.id, formId), eq(forms.organizationId, orgId)));
 
   revalidatePath(`/dashboard/${orgId}/forms`);
   revalidatePath(`/dashboard/${orgId}/forms/${formId}`);
@@ -297,7 +336,9 @@ export async function deleteForm(
     return { success: false, error: "Form not found" };
   }
 
-  await db.delete(forms).where(eq(forms.id, formId));
+  await db
+    .delete(forms)
+    .where(and(eq(forms.id, formId), eq(forms.organizationId, orgId)));
 
   revalidatePath(`/dashboard/${orgId}/forms`);
   return { success: true };
@@ -308,6 +349,11 @@ export async function deleteForm(
 // ---------------------------------------------------------------------------
 
 export async function getFormsWithStats(orgId: string): Promise<FormWithStats[]> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "guardian");
+
   const orgForms = await db
     .select()
     .from(forms)
@@ -361,6 +407,11 @@ export async function getFormsWithStats(orgId: string): Promise<FormWithStats[]>
 }
 
 export async function getFormDetail(orgId: string, formId: string): Promise<FormDetail | null> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "guardian");
+
   const [form] = await db
     .select()
     .from(forms)
@@ -374,7 +425,24 @@ export async function getFormDetail(orgId: string, formId: string): Promise<Form
   return form ?? null;
 }
 
-export async function getFormAssignments(formId: string): Promise<FormAssignmentRow[]> {
+export async function getFormAssignments(
+  orgId: string,
+  formId: string,
+): Promise<FormAssignmentRow[]> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "guardian");
+
+  const [ownedForm] = await db
+    .select({ id: forms.id })
+    .from(forms)
+    .where(and(eq(forms.id, formId), eq(forms.organizationId, orgId)));
+
+  if (!ownedForm) {
+    return [];
+  }
+
   const assignments = await db
     .select()
     .from(formAssignments)
@@ -390,13 +458,23 @@ export async function getFormAssignments(formId: string): Promise<FormAssignment
       const [team] = await db
         .select({ name: teams.name })
         .from(teams)
-        .where(eq(teams.id, a.assignmentTargetId));
+        .where(
+          and(
+            eq(teams.id, a.assignmentTargetId),
+            eq(teams.organizationId, orgId),
+          ),
+        );
       targetName = team ? `Team: ${team.name}` : "Unknown Team";
     } else if (a.assignmentType === "player" && a.assignmentTargetId) {
       const [player] = await db
         .select({ firstName: players.firstName, lastName: players.lastName })
         .from(players)
-        .where(eq(players.id, a.assignmentTargetId));
+        .where(
+          and(
+            eq(players.id, a.assignmentTargetId),
+            eq(players.organizationId, orgId),
+          ),
+        );
       targetName = player ? `Player: ${player.firstName} ${player.lastName}` : "Unknown Player";
     }
 
@@ -413,7 +491,24 @@ export async function getFormAssignments(formId: string): Promise<FormAssignment
   return rows;
 }
 
-export async function getFormSubmissions(formId: string): Promise<SubmissionRow[]> {
+export async function getFormSubmissions(
+  orgId: string,
+  formId: string,
+): Promise<SubmissionRow[]> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "admin");
+
+  const [ownedForm] = await db
+    .select({ id: forms.id })
+    .from(forms)
+    .where(and(eq(forms.id, formId), eq(forms.organizationId, orgId)));
+
+  if (!ownedForm) {
+    return [];
+  }
+
   const rows = await db
     .select({
       id: formSubmissions.id,
@@ -445,6 +540,11 @@ export async function getFormSubmissions(formId: string): Promise<SubmissionRow[
 }
 
 export async function getOrgTeams(orgId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "guardian");
+
   return db
     .select({ id: teams.id, name: teams.name })
     .from(teams)
@@ -453,6 +553,11 @@ export async function getOrgTeams(orgId: string) {
 }
 
 export async function getOrgPlayers(orgId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "guardian");
+
   return db
     .select({
       id: players.id,
@@ -466,6 +571,14 @@ export async function getOrgPlayers(orgId: string) {
 
 /** Get assignments relevant to a guardian (org-wide, their players' teams, their players directly). */
 export async function getGuardianAssignments(orgId: string, formId: string, clerkUserId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  // Prevent callers from querying other users' data
+  if (userId !== clerkUserId) throw new Error("Forbidden");
+
+  await requireRole(orgId, userId, "guardian");
+
   // Find the guardian record for this user in this org
   const [guardian] = await db
     .select()

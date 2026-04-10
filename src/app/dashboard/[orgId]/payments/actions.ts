@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { paymentItems, payments } from "@/db/schema";
 import { requireRole } from "@/lib/memberships";
@@ -76,6 +76,9 @@ export async function createPaymentItem(
   if (isNaN(dollars) || dollars <= 0) {
     return { success: false, error: "Amount must be a positive number" };
   }
+  if (dollars > 50000) {
+    return { success: false, error: "Amount exceeds $50,000 maximum" };
+  }
 
   const amountCents = Math.round(dollars * 100);
 
@@ -99,6 +102,11 @@ export async function createPaymentItem(
 // ---------------------------------------------------------------------------
 
 export async function getPaymentItems(orgId: string): Promise<PaymentItemRow[]> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "guardian");
+
   const rows = await db
     .select()
     .from(paymentItems)
@@ -122,6 +130,11 @@ export async function getPaymentItems(orgId: string): Promise<PaymentItemRow[]> 
 // ---------------------------------------------------------------------------
 
 export async function getPayments(orgId: string): Promise<PaymentRow[]> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await requireRole(orgId, userId, "guardian");
+
   const rows = await db
     .select({
       id: payments.id,
@@ -158,7 +171,12 @@ export async function createCheckoutSession(
   const [item] = await db
     .select()
     .from(paymentItems)
-    .where(eq(paymentItems.id, paymentItemId));
+    .where(
+      and(
+        eq(paymentItems.id, paymentItemId),
+        eq(paymentItems.organizationId, orgId),
+      ),
+    );
 
   if (!item) {
     return { success: false, error: "Payment item not found" };
