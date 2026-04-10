@@ -105,6 +105,8 @@ export const paymentStatusEnum = pgEnum("payment_status", [
 export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "trial",
   "active",
+  "past_due",
+  "canceled",
   "expired",
   "none",
 ]);

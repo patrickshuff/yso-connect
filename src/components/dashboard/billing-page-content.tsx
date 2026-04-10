@@ -15,7 +15,7 @@ import { createCoachCheckoutSession } from "@/app/dashboard/[orgId]/billing/acti
 
 interface BillingPageContentProps {
   orgId: string;
-  subscriptionStatus: "trial" | "active" | "expired" | "none";
+  subscriptionStatus: "trial" | "active" | "past_due" | "canceled" | "expired" | "none";
   trialEndsAt: string | null;
   subscriptionPaidUntil: string | null;
   createdAt: string;
@@ -56,6 +56,24 @@ function StatusBadge({
       <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
         <Clock className="mr-1 size-3" />
         Trial
+      </Badge>
+    );
+  }
+
+  if (status === "past_due") {
+    return (
+      <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+        <Clock className="mr-1 size-3" />
+        Past due
+      </Badge>
+    );
+  }
+
+  if (status === "canceled") {
+    return (
+      <Badge variant="destructive">
+        <XCircle className="mr-1 size-3" />
+        Canceled
       </Badge>
     );
   }

@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/db";
-import { payments, organizations } from "@/db/schema";
+import { funnelEvents, organizations, payments } from "@/db/schema";
+import { sendEmail } from "@/lib/email";
+import { buildPaymentFailedEmail } from "@/lib/email-templates";
+import { logger } from "@/lib/logger";
 import type Stripe from "stripe";
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     return NextResponse.json(
       { error: "Webhook secret not configured" },
@@ -44,6 +46,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (
     event.type === "invoice.paid" ||
+    event.type === "invoice.payment_failed" ||
+    event.type === "customer.subscription.deleted" ||
     event.type === "customer.subscription.updated"
   ) {
     await handleSubscriptionEvent(event);
@@ -131,10 +135,13 @@ async function handleCoachBillingPayment(
 async function handleSubscriptionEvent(event: Stripe.Event): Promise<void> {
   let subscription: Stripe.Subscription;
 
-  if (event.type === "invoice.paid") {
+  if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
     const invoice = event.data.object as Stripe.Invoice;
-    const subRef = invoice.parent?.subscription_details?.subscription;
-    if (!subRef) return;
+    const subRef =
+      invoice.parent?.subscription_details?.subscription ?? invoice.subscription;
+    if (!subRef) {
+      return;
+    }
     const subId = typeof subRef === "string" ? subRef : subRef.id;
     subscription = await stripe.subscriptions.retrieve(subId);
   } else {
@@ -145,14 +152,112 @@ async function handleSubscriptionEvent(event: Stripe.Event): Promise<void> {
   if (!orgId) return;
 
   const paidUntil = getPeriodEndFromSubscription(subscription);
-  const isActive = subscription.status === "active";
+  const nextStatus = getOrganizationSubscriptionStatus(event.type, subscription);
 
   await db
     .update(organizations)
     .set({
-      subscriptionStatus: isActive ? "active" : "expired",
+      subscriptionStatus: nextStatus,
       subscriptionPaidUntil: paidUntil,
       updatedAt: new Date(),
     })
     .where(eq(organizations.id, orgId));
+
+  if (event.type === "invoice.payment_failed") {
+    await notifyPaymentFailed(orgId);
+    await logBillingFunnelEvent("payment_failed", orgId);
+    return;
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    await logBillingFunnelEvent("subscription_canceled", orgId);
+  }
+}
+
+function getOrganizationSubscriptionStatus(
+  eventType: Stripe.Event.Type,
+  subscription: Stripe.Subscription,
+): "active" | "past_due" | "canceled" | "expired" {
+  if (eventType === "invoice.paid") {
+    return "active";
+  }
+  if (eventType === "invoice.payment_failed") {
+    return "past_due";
+  }
+  if (eventType === "customer.subscription.deleted") {
+    return "canceled";
+  }
+
+  switch (subscription.status) {
+    case "active":
+    case "trialing":
+      return "active";
+    case "past_due":
+      return "past_due";
+    case "canceled":
+    case "unpaid":
+    case "incomplete_expired":
+      return "canceled";
+    default:
+      return "expired";
+  }
+}
+
+function getAppUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return "http://localhost:3000";
+}
+
+async function notifyPaymentFailed(orgId: string): Promise<void> {
+  const [org] = await db
+    .select({
+      id: organizations.id,
+      name: organizations.name,
+      contactEmail: organizations.contactEmail,
+    })
+    .from(organizations)
+    .where(eq(organizations.id, orgId));
+
+  if (!org?.contactEmail) {
+    logger.warn("Skipping payment failed email: missing organization contact email", {
+      orgId,
+    });
+    return;
+  }
+
+  const html = buildPaymentFailedEmail({
+    orgName: org.name,
+    appUrl: getAppUrl(),
+    orgId: org.id,
+  });
+
+  const sendResult = await sendEmail(
+    org.contactEmail,
+    `Payment failed for ${org.name}`,
+    html,
+  );
+
+  if (!sendResult.success) {
+    logger.error("Failed to send payment failed email", {
+      orgId,
+      error: sendResult.error,
+    });
+  }
+}
+
+async function logBillingFunnelEvent(
+  eventName: "payment_failed" | "subscription_canceled",
+  organizationId: string,
+): Promise<void> {
+  await db.insert(funnelEvents).values({
+    eventName,
+    organizationId,
+    location: "stripe_webhook",
+    pagePath: "/api/webhooks/stripe",
+  });
 }

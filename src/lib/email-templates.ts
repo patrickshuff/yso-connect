@@ -160,3 +160,43 @@ export function buildBroadcastEmail(params: BroadcastEmailParams): string {
 
   return baseLayout(header, bodyHtml, footer);
 }
+
+export interface PaymentFailedEmailParams {
+  orgName: string;
+  appUrl: string;
+  orgId: string;
+}
+
+export function buildPaymentFailedEmail(params: PaymentFailedEmailParams): string {
+  const { orgName, appUrl, orgId } = params;
+  const billingUrl = `${appUrl}/dashboard/${orgId}/billing`;
+
+  const header = standardHeader(orgName);
+
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#111827;">Payment failed</h1>
+
+    <p style="margin:0 0 16px;font-size:16px;color:#374151;line-height:1.7;">
+      We could not process your latest YSO Connect subscription payment for
+      <strong>${escapeHtml(orgName)}</strong>.
+    </p>
+
+    <p style="margin:0 0 24px;font-size:16px;color:#374151;line-height:1.7;">
+      Your account is now in read-only mode. Update your billing method to restore full access.
+    </p>
+
+    <table cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="background-color:${BRAND_BLUE};border-radius:6px;">
+          <a href="${billingUrl}" style="display:inline-block;padding:12px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;">Update billing</a>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  const footer = `<p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
+    You are receiving this email as the billing contact for <strong>${escapeHtml(orgName)}</strong>.
+  </p>`;
+
+  return baseLayout(header, body, footer);
+}

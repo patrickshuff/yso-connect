@@ -20,11 +20,12 @@ export function isSubscriptionActive(org: Organization): boolean {
 
 interface AccessAllowed {
   allowed: true;
+  mode: "full" | "read_only";
 }
 
 interface AccessDenied {
   allowed: false;
-  reason: "trial_expired" | "subscription_expired";
+  reason: "trial_expired" | "subscription_expired" | "subscription_canceled";
   trialEndsAt: Date | null;
   daysRemaining: number;
 }
@@ -33,11 +34,15 @@ export type AccessCheckResult = AccessAllowed | AccessDenied;
 
 export function requireActiveAccess(org: Organization): AccessCheckResult {
   if (isSubscriptionActive(org)) {
-    return { allowed: true };
+    return { allowed: true, mode: "full" };
+  }
+
+  if (org.subscriptionStatus === "past_due") {
+    return { allowed: true, mode: "read_only" };
   }
 
   if (isTrialActive(org)) {
-    return { allowed: true };
+    return { allowed: true, mode: "full" };
   }
 
   const now = new Date();
@@ -47,9 +52,11 @@ export function requireActiveAccess(org: Organization): AccessCheckResult {
     : 0;
 
   const reason =
-    org.subscriptionStatus === "active" || org.subscriptionStatus === "expired"
-      ? "subscription_expired"
-      : "trial_expired";
+    org.subscriptionStatus === "canceled"
+      ? "subscription_canceled"
+      : org.subscriptionStatus === "active" || org.subscriptionStatus === "expired"
+        ? "subscription_expired"
+        : "trial_expired";
 
   return {
     allowed: false,

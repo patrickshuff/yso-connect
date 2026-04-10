@@ -1,12 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Lock } from "lucide-react";
 
 interface BillingGateProps {
   children: React.ReactNode;
-  subscriptionStatus: "trial" | "active" | "expired" | "none";
+  subscriptionStatus: "trial" | "active" | "past_due" | "canceled" | "expired" | "none";
   trialEndsAt: string | null;
   subscriptionPaidUntil: string | null;
   orgId: string;
@@ -43,6 +45,34 @@ export function BillingGate({
   subscriptionPaidUntil,
   orgId,
 }: BillingGateProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const billingPath = `/dashboard/${orgId}/billing`;
+  const isBillingPage = pathname === billingPath;
+
+  useEffect(() => {
+    if (subscriptionStatus === "canceled" && !isBillingPage) {
+      router.replace(billingPath);
+    }
+  }, [billingPath, isBillingPage, router, subscriptionStatus]);
+
+  if (subscriptionStatus === "canceled" && !isBillingPage) {
+    return (
+      <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+        Redirecting to billing to reactivate your subscription.
+      </div>
+    );
+  }
+
+  if (subscriptionStatus === "past_due") {
+    return (
+      <>
+        <PastDueBanner orgId={orgId} />
+        {children}
+      </>
+    );
+  }
+
   if (isSubActive(subscriptionStatus, subscriptionPaidUntil)) {
     return <>{children}</>;
   }
@@ -58,6 +88,24 @@ export function BillingGate({
   }
 
   return <ExpiredGate orgId={orgId} />;
+}
+
+function PastDueBanner({ orgId }: { orgId: string }) {
+  return (
+    <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950">
+      <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-200">
+        <Clock className="size-4" />
+        <span>
+          Payment is past due. Dashboard is in read-only mode until billing is updated.
+        </span>
+      </div>
+      <a href={`/dashboard/${orgId}/billing`}>
+        <Button variant="outline" size="sm" className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900">
+          Update billing
+        </Button>
+      </a>
+    </div>
+  );
 }
 
 function TrialBanner({
