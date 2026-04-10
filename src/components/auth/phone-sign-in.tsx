@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-type Step = "phone" | "otp";
+type Method = "phone" | "email";
+type Step = "identifier" | "otp";
 
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
@@ -36,8 +37,10 @@ export function PhoneSignIn() {
   const router = useRouter();
   const { signIn, fetchStatus } = useSignIn();
 
-  const [step, setStep] = useState<Step>("phone");
+  const [method, setMethod] = useState<Method>("phone");
+  const [step, setStep] = useState<Step>("identifier");
   const [displayPhone, setDisplayPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -49,23 +52,44 @@ export function PhoneSignIn() {
     setError(null);
   }
 
+  function switchMethod(m: Method) {
+    setMethod(m);
+    setStep("identifier");
+    setDisplayPhone("");
+    setEmail("");
+    setOtp("");
+    setError(null);
+  }
+
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
     if (!signIn) return;
     setError(null);
 
-    const { error: createErr } = await signIn.create({
-      identifier: toE164(displayPhone),
-    });
-    if (createErr) {
-      setError(createErr.message);
-      return;
-    }
-
-    const { error: sendErr } = await signIn.phoneCode.sendCode();
-    if (sendErr) {
-      setError(sendErr.message);
-      return;
+    if (method === "phone") {
+      const { error: createErr } = await signIn.create({
+        identifier: toE164(displayPhone),
+      });
+      if (createErr) {
+        setError(createErr.message);
+        return;
+      }
+      const { error: sendErr } = await signIn.phoneCode.sendCode();
+      if (sendErr) {
+        setError(sendErr.message);
+        return;
+      }
+    } else {
+      const { error: createErr } = await signIn.create({ identifier: email });
+      if (createErr) {
+        setError(createErr.message);
+        return;
+      }
+      const { error: sendErr } = await signIn.emailCode.sendCode();
+      if (sendErr) {
+        setError(sendErr.message);
+        return;
+      }
     }
 
     setStep("otp");
@@ -76,12 +100,20 @@ export function PhoneSignIn() {
     if (!signIn) return;
     setError(null);
 
-    const { error: verifyErr } = await signIn.phoneCode.verifyCode({
-      code: otp,
-    });
-    if (verifyErr) {
-      setError(verifyErr.message);
-      return;
+    if (method === "phone") {
+      const { error: verifyErr } = await signIn.phoneCode.verifyCode({
+        code: otp,
+      });
+      if (verifyErr) {
+        setError(verifyErr.message);
+        return;
+      }
+    } else {
+      const { error: verifyErr2 } = await signIn.emailCode.verifyCode({ code: otp });
+      if (verifyErr2) {
+        setError(verifyErr2.message);
+        return;
+      }
     }
 
     if (signIn.status !== "complete") {
@@ -104,33 +136,83 @@ export function PhoneSignIn() {
     }
   }
 
+  const sentTo = method === "phone" ? displayPhone : email;
+
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>
-          {step === "phone"
-            ? "Enter your phone number to receive a one-time code."
-            : `We sent a 6-digit code to ${displayPhone}.`}
+          {step === "identifier"
+            ? "Enter your phone number or email to receive a one-time code."
+            : `We sent a 6-digit code to ${sentTo}.`}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {step === "phone" ? (
+      <CardContent className="flex flex-col gap-4">
+        {step === "identifier" && (
+          <div className="flex rounded-lg border border-input overflow-hidden text-sm">
+            <button
+              type="button"
+              onClick={() => switchMethod("phone")}
+              className={`flex-1 py-1.5 font-medium transition-colors ${
+                method === "phone"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              Phone
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMethod("email")}
+              className={`flex-1 py-1.5 font-medium transition-colors ${
+                method === "email"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              Email
+            </button>
+          </div>
+        )}
+
+        {step === "identifier" ? (
           <form onSubmit={handleSendCode} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="phone">Phone number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
-                value={displayPhone}
-                onChange={handlePhoneChange}
-                autoComplete="tel"
-                required
-              />
-            </div>
+            {method === "phone" ? (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="phone">Phone number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  value={displayPhone}
+                  onChange={handlePhoneChange}
+                  autoComplete="tel"
+                  required
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="email">Email address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError(null);
+                  }}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={loading || !displayPhone}>
+            <Button
+              type="submit"
+              disabled={loading || (method === "phone" ? !displayPhone : !email)}
+            >
               {loading ? "Sending…" : "Send code"}
             </Button>
           </form>
@@ -162,12 +244,12 @@ export function PhoneSignIn() {
               variant="ghost"
               size="sm"
               onClick={() => {
-                setStep("phone");
+                setStep("identifier");
                 setOtp("");
                 setError(null);
               }}
             >
-              Use a different number
+              {method === "phone" ? "Use a different number" : "Use a different email"}
             </Button>
           </form>
         )}
