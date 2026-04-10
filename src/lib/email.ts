@@ -18,7 +18,9 @@ export async function sendEmail(
   htmlBody: string,
 ): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const fromAddress = process.env.RESEND_FROM_ADDRESS ?? "noreply@ysoconnect.com";
+  const rawFrom = process.env.RESEND_FROM_ADDRESS ?? "noreply@ysoconnect.com";
+  const fromName = process.env.RESEND_FROM_NAME ?? "YSO Connect";
+  const fromAddress = `${fromName} <${rawFrom}>`;
 
   if (!apiKey) {
     logger.warn("RESEND_API_KEY not configured, returning mock success", {
