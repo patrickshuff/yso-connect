@@ -2,6 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
 import {
   guardians,
+  organizations,
   playerGuardians,
   teamPlayers,
   messages,
@@ -11,15 +12,8 @@ import {
 } from "@/db/schema";
 import { sendSMS } from "@/lib/sms";
 import { sendEmail } from "@/lib/email";
+import { buildBroadcastEmail } from "@/lib/email-templates";
 import { logger } from "@/lib/logger";
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 type MessageChannel = "sms" | "email" | "both";
 type TargetType = "team" | "organization" | "custom";
@@ -135,6 +129,13 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
     })
     .returning();
 
+  // Fetch org name for email templates
+  const [org] = await db
+    .select({ name: organizations.name })
+    .from(organizations)
+    .where(eq(organizations.id, orgId));
+  const orgName = org?.name ?? "Your Organization";
+
   // Resolve and deduplicate recipients
   const rawRecipients = await resolveRecipients(orgId, targetType, targetId);
   const recipients = await applyPreferences(orgId, rawRecipients);
@@ -208,28 +209,14 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
       const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardian.id}`;
-      const htmlBody = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; margin: 0; padding: 40px 16px;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden;">
-    <tr>
-      <td style="padding: 40px 40px 24px;">
-        ${subject ? `<h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #111827;">${escapeHtml(subject)}</h2>` : ""}
-        <p style="margin: 0; font-size: 16px; color: #374151; line-height: 1.6;">${escapeHtml(body).replace(/\n/g, "<br>")}</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding: 20px 40px 32px; border-top: 1px solid #e5e7eb;">
-        <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
-          You received this message from your organization.
-          <a href="${unsubscribeUrl}" style="color: #9ca3af;">Unsubscribe</a> from future emails.
-        </p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+      const htmlBody = buildBroadcastEmail({
+        firstName: guardian.firstName,
+        orgName,
+        subject,
+        body,
+        appUrl,
+        guardianId: guardian.id,
+      });
 
       const result = await sendEmail(
         guardian.email,
