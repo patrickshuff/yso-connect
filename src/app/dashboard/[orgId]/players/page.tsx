@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { Users } from "lucide-react";
 import { db } from "@/db";
 import { players, playerGuardians, guardians } from "@/db/schema";
@@ -45,7 +45,7 @@ async function getPlayersWithGuardians(
     })
     .from(playerGuardians)
     .innerJoin(guardians, eq(playerGuardians.guardianId, guardians.id))
-    .where(sql`${playerGuardians.playerId} = ANY(${playerIds})`);
+    .where(inArray(playerGuardians.playerId, playerIds));
 
   const guardiansByPlayer = new Map<string, string[]>();
   for (const link of guardianLinks) {
