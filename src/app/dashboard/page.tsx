@@ -1,15 +1,49 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { auth } from "@clerk/nextjs/server";
 import { getCurrentUserOrganizations } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { guardians } from "@/db/schema";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const GUARDIAN_INVITE_COOKIE = "guardian_invite_token";
 
 export default async function DashboardPage() {
   const orgs = await getCurrentUserOrganizations();
 
   if (orgs.length > 0) {
     redirect(`/dashboard/${orgs[0].id}`);
+  }
+
+  // Check for a pending guardian invite claim (cookie set by /invite/[token])
+  const cookieStore = await cookies();
+  const inviteToken = cookieStore.get(GUARDIAN_INVITE_COOKIE)?.value;
+  if (inviteToken) {
+    redirect("/api/claim-guardian");
+  }
+
+  // Check if this user is already a linked guardian (returning visit after claim)
+  const { userId } = await auth();
+  if (userId) {
+    const [existingGuardian] = await db
+      .select({ id: guardians.id })
+      .from(guardians)
+      .where(eq(guardians.clerkUserId, userId))
+      .limit(1);
+
+    if (existingGuardian) {
+      redirect("/dashboard/guardian");
+    }
   }
 
   return (

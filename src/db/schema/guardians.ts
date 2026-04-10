@@ -11,9 +11,12 @@ export const guardians = pgTable("guardians", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   preferredContact: contactPreferenceEnum("preferred_contact").notNull().default("sms"),
+  inviteToken: varchar("invite_token", { length: 255 }),
+  inviteTokenExpiresAt: timestamp("invite_token_expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 }, (table) => [
   index("guardians_organization_id_idx").on(table.organizationId),
   index("guardians_clerk_user_id_idx").on(table.clerkUserId),
+  index("guardians_invite_token_idx").on(table.inviteToken),
 ]);

@@ -3,96 +3,122 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { guardians } from "@/db/schema";
 
+const INVITE_TOKEN_EXPIRY_DAYS = 7;
+
 /**
- * Generates a unique invite token for a guardian.
- *
- * The token is a 32-byte hex string stored in a dedicated column.
- * In a production system this would be stored in a separate invite_tokens table
- * with expiration, but for the MVP we encode the guardianId into the token
- * and verify it on claim.
- *
- * Token format: <random_hex>.<guardianId>
- * This is a simple, opaque token that can be included in an SMS invite link.
+ * Generates a cryptographically random invite token.
+ * The token is a 64-character hex string stored in the guardian record.
  */
-export function generateInviteToken(guardianId: string): string {
-  const random = randomBytes(32).toString("hex");
-  return `${random}.${guardianId}`;
+export function generateInviteToken(): string {
+  return randomBytes(32).toString("hex");
 }
 
 /**
- * Parses an invite token and returns the guardian ID.
- * Returns null if the token format is invalid.
+ * Returns the expiry timestamp for a freshly generated invite token.
  */
-export function parseInviteToken(
-  token: string
-): { guardianId: string } | null {
-  const parts = token.split(".");
-  if (parts.length !== 2 || !parts[0] || !parts[1]) {
-    return null;
+export function getInviteTokenExpiry(): Date {
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + INVITE_TOKEN_EXPIRY_DAYS);
+  return expiry;
+}
+
+type InviteTokenStatus = "valid" | "not_found" | "expired" | "claimed";
+
+/**
+ * Looks up a guardian by invite token and returns the validation status.
+ */
+export async function findGuardianByInviteToken(token: string): Promise<
+  | { guardian: typeof guardians.$inferSelect; status: "valid" }
+  | { guardian: null; status: Exclude<InviteTokenStatus, "valid"> }
+> {
+  const [guardian] = await db
+    .select()
+    .from(guardians)
+    .where(eq(guardians.inviteToken, token));
+
+  if (!guardian) {
+    return { guardian: null, status: "not_found" };
   }
-  return { guardianId: parts[1] };
+
+  // Already claimed — account is linked to a Clerk user
+  if (guardian.clerkUserId) {
+    return { guardian: null, status: "claimed" };
+  }
+
+  // Token has expired
+  if (
+    guardian.inviteTokenExpiresAt &&
+    guardian.inviteTokenExpiresAt < new Date()
+  ) {
+    return { guardian: null, status: "expired" };
+  }
+
+  return { guardian, status: "valid" };
 }
 
 /**
  * Claims a guardian account by linking a Clerk user ID to the guardian record.
  *
  * Flow:
- * 1. Admin creates a guardian record (firstName, lastName, phone, etc.)
- * 2. Admin sends an SMS invite with a link containing the invite token
- * 3. Guardian clicks the link, signs up via Clerk
- * 4. After Clerk sign-up, this function is called to link the Clerk userId
- *    to the existing guardian record
+ * 1. Admin creates a guardian record (invite token generated and stored in DB)
+ * 2. Admin email triggers invite link containing the token
+ * 3. Guardian clicks the link, lands on /invite/[token], sets a cookie
+ * 4. Guardian signs up or signs in via Clerk
+ * 5. After auth, /api/claim-guardian reads the cookie and calls this function
  *
- * Returns the updated guardian record, or null if the claim failed.
+ * Returns the guardian info on success, or an error description on failure.
  */
 export async function claimGuardianAccount(
   token: string,
-  clerkUserId: string
-): Promise<{ success: true; guardianId: string } | { success: false; error: string }> {
-  const parsed = parseInviteToken(token);
-  if (!parsed) {
-    return { success: false, error: "Invalid invite token format" };
-  }
-
-  const { guardianId } = parsed;
-
-  // Fetch the guardian record
+  clerkUserId: string,
+): Promise<
+  | { success: true; guardianId: string; organizationId: string }
+  | { success: false; error: string }
+> {
   const [guardian] = await db
     .select()
     .from(guardians)
-    .where(eq(guardians.id, guardianId));
+    .where(eq(guardians.inviteToken, token));
 
   if (!guardian) {
-    return { success: false, error: "Guardian record not found" };
+    return { success: false, error: "Invite link is invalid" };
   }
 
-  // Check if already claimed by another user
-  if (guardian.clerkUserId && guardian.clerkUserId !== clerkUserId) {
+  // Idempotent: already claimed by this exact user
+  if (guardian.clerkUserId === clerkUserId) {
     return {
-      success: false,
-      error: "This guardian account has already been claimed",
+      success: true,
+      guardianId: guardian.id,
+      organizationId: guardian.organizationId,
     };
   }
 
-  // If already claimed by this user, idempotent success
-  if (guardian.clerkUserId === clerkUserId) {
-    return { success: true, guardianId };
+  // Already claimed by a different user
+  if (guardian.clerkUserId) {
+    return { success: false, error: "This invite has already been used" };
   }
 
-  // Link the Clerk user to the guardian record.
-  // Use a condition that only updates unclaimed records to prevent race conditions.
+  // Token has expired
+  if (
+    guardian.inviteTokenExpiresAt &&
+    guardian.inviteTokenExpiresAt < new Date()
+  ) {
+    return { success: false, error: "Invite link has expired" };
+  }
+
   const [updated] = await db
     .update(guardians)
-    .set({
-      clerkUserId,
-      updatedAt: new Date(),
-    })
-    .where(eq(guardians.id, guardianId))
+    .set({ clerkUserId, updatedAt: new Date() })
+    .where(eq(guardians.id, guardian.id))
     .returning();
 
   if (!updated) {
-    return { success: false, error: "Failed to claim guardian account" };
+    return { success: false, error: "Failed to claim account" };
   }
 
-  return { success: true, guardianId };
+  return {
+    success: true,
+    guardianId: updated.id,
+    organizationId: updated.organizationId,
+  };
 }

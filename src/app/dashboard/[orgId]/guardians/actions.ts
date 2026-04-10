@@ -7,7 +7,8 @@ import { db } from "@/db";
 import { guardians, organizations } from "@/db/schema";
 import { requireRole } from "@/lib/memberships";
 import { sendEmail } from "@/lib/email";
-import { buildWelcomeEmail } from "@/lib/email-templates";
+import { buildInviteEmail } from "@/lib/email-templates";
+import { generateInviteToken, getInviteTokenExpiry } from "@/lib/guardian-claim";
 import { logger } from "@/lib/logger";
 
 interface CreateGuardianResult {
@@ -39,6 +40,10 @@ export async function createGuardian(
     return { success: false, error: "First and last name are required" };
   }
 
+  // Generate invite token before inserting so it's stored on creation
+  const inviteToken = generateInviteToken();
+  const inviteTokenExpiresAt = getInviteTokenExpiry();
+
   const [guardian] = await db
     .insert(guardians)
     .values({
@@ -48,13 +53,15 @@ export async function createGuardian(
       email,
       phone,
       preferredContact,
+      inviteToken,
+      inviteTokenExpiresAt,
     })
     .returning();
 
   revalidatePath(`/dashboard/${orgId}/guardians`);
   revalidatePath(`/dashboard/${orgId}`);
 
-  // Fire welcome email non-blocking — guardian was already created
+  // Fire invite email non-blocking — guardian was already created
   if (guardian.email) {
     const guardianEmail = guardian.email;
     void (async () => {
@@ -65,14 +72,17 @@ export async function createGuardian(
           .where(eq(organizations.id, orgId));
 
         const orgName = org?.name ?? "Your Organization";
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
+        const appUrl =
+          process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
+        const inviteUrl = `${appUrl}/invite/${guardian.inviteToken}`;
         const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardian.id}`;
 
-        const htmlBody = buildWelcomeEmail({
+        const htmlBody = buildInviteEmail({
           firstName: guardian.firstName,
           orgName,
-          appUrl,
+          inviteUrl,
           guardianId: guardian.id,
+          appUrl,
         });
         const unsubscribeHeaders = {
           "List-Unsubscribe": `<${unsubscribeUrl}>`,
@@ -81,26 +91,26 @@ export async function createGuardian(
 
         const result = await sendEmail(
           guardianEmail,
-          `Welcome to ${orgName}!`,
+          `You've been invited to ${orgName} on YSO Connect`,
           htmlBody,
           unsubscribeHeaders,
         );
 
         if (!result.success) {
-          logger.warn("Guardian welcome email failed", {
+          logger.warn("Guardian invite email failed", {
             guardianId: guardian.id,
             orgId,
             error: result.error,
           });
         } else {
-          logger.info("Guardian welcome email sent", {
+          logger.info("Guardian invite email sent", {
             guardianId: guardian.id,
             orgId,
             emailId: result.id,
           });
         }
       } catch (err) {
-        logger.error("Unexpected error sending guardian welcome email", {
+        logger.error("Unexpected error sending guardian invite email", {
           guardianId: guardian.id,
           orgId,
           error: err instanceof Error ? err.message : String(err),
