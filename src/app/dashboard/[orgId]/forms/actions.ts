@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { eq, and, sql, count } from "drizzle-orm";
+import { eq, and, sql, count, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   forms,
@@ -325,7 +325,7 @@ export async function getFormsWithStats(orgId: string): Promise<FormWithStats[]>
       assignmentCount: count(),
     })
     .from(formAssignments)
-    .where(sql`${formAssignments.formId} = ANY(${formIds})`)
+    .where(inArray(formAssignments.formId, formIds))
     .groupBy(formAssignments.formId);
 
   const completionRows = await db
@@ -337,7 +337,7 @@ export async function getFormsWithStats(orgId: string): Promise<FormWithStats[]>
     .innerJoin(formAssignments, eq(formSubmissions.formAssignmentId, formAssignments.id))
     .where(
       and(
-        sql`${formAssignments.formId} = ANY(${formIds})`,
+        inArray(formAssignments.formId, formIds),
         eq(formSubmissions.status, "completed"),
       ),
     )
@@ -497,7 +497,7 @@ export async function getGuardianAssignments(orgId: string, formId: string, cler
     ? await db
         .select({ teamId: teamPlayers.teamId })
         .from(teamPlayers)
-        .where(sql`${teamPlayers.playerId} = ANY(${playerIds})`)
+        .where(inArray(teamPlayers.playerId, playerIds))
     : [];
   const teamIds = playerTeamRows.map((r) => r.teamId);
 
@@ -530,7 +530,7 @@ export async function getGuardianAssignments(orgId: string, formId: string, cler
         .from(formSubmissions)
         .where(
           and(
-            sql`${formSubmissions.formAssignmentId} = ANY(${relevantAssignments.map((a) => a.id)})`,
+            inArray(formSubmissions.formAssignmentId, relevantAssignments.map((a) => a.id)),
             eq(formSubmissions.guardianId, guardian.id),
           ),
         )
@@ -569,7 +569,7 @@ export async function getGuardianAssignments(orgId: string, formId: string, cler
     const teamRows = await db
       .select({ id: teams.id, name: teams.name })
       .from(teams)
-      .where(sql`${teams.id} = ANY(${teamTargetIds})`);
+      .where(inArray(teams.id, teamTargetIds));
     for (const t of teamRows) {
       teamNameMap.set(t.id, t.name);
     }
@@ -579,7 +579,7 @@ export async function getGuardianAssignments(orgId: string, formId: string, cler
     const playerRows = await db
       .select({ id: players.id, firstName: players.firstName, lastName: players.lastName })
       .from(players)
-      .where(sql`${players.id} = ANY(${playerTargetIds})`);
+      .where(inArray(players.id, playerTargetIds));
     for (const p of playerRows) {
       playerNameMap.set(p.id, `${p.firstName} ${p.lastName}`);
     }
