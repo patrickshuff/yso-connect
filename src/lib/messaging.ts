@@ -206,12 +206,40 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
         })
         .returning();
 
-      const htmlBody = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-${subject ? `<h2>${escapeHtml(subject)}</h2>` : ""}
-<p>${escapeHtml(body).replace(/\n/g, "<br>")}</p>
-</div>`;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
+      const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardian.id}`;
+      const htmlBody = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; margin: 0; padding: 40px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden;">
+    <tr>
+      <td style="padding: 40px 40px 24px;">
+        ${subject ? `<h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #111827;">${escapeHtml(subject)}</h2>` : ""}
+        <p style="margin: 0; font-size: 16px; color: #374151; line-height: 1.6;">${escapeHtml(body).replace(/\n/g, "<br>")}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px 40px 32px; border-top: 1px solid #e5e7eb;">
+        <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+          You received this message from your organization.
+          <a href="${unsubscribeUrl}" style="color: #9ca3af;">Unsubscribe</a> from future emails.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
-      const result = await sendEmail(guardian.email, subject ?? "Message from your organization", htmlBody);
+      const result = await sendEmail(
+        guardian.email,
+        subject ?? "Message from your organization",
+        htmlBody,
+        {
+          "List-Unsubscribe": `<${unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+      );
 
       await db
         .update(messageDeliveries)

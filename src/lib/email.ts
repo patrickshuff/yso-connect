@@ -16,6 +16,7 @@ export async function sendEmail(
   to: string,
   subject: string,
   htmlBody: string,
+  extraHeaders?: Record<string, string>,
 ): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const rawFrom = process.env.RESEND_FROM_ADDRESS ?? "noreply@ysoconnect.com";
@@ -42,6 +43,7 @@ export async function sendEmail(
         to: [to],
         subject,
         html: htmlBody,
+        ...(extraHeaders ? { headers: extraHeaders } : {}),
       }),
     });
 

@@ -64,12 +64,8 @@ export async function createGuardian(
           .where(eq(organizations.id, orgId));
 
         const orgName = org?.name ?? "Your Organization";
-        const contactMethod =
-          guardian.preferredContact === "sms"
-            ? "SMS text messages"
-            : guardian.preferredContact === "email"
-              ? "email"
-              : "SMS and email";
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
+        const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardian.id}`;
 
         const htmlBody = `
 <!DOCTYPE html>
@@ -89,10 +85,7 @@ export async function createGuardian(
             Hi ${guardian.firstName},
           </p>
           <p style="margin: 0 0 16px; font-size: 16px; color: #374151; line-height: 1.6;">
-            You've been added to <strong>${orgName}</strong> as a guardian. You'll receive updates about your player's schedule and important announcements via <strong>${contactMethod}</strong>.
-          </p>
-          <p style="margin: 0 0 16px; font-size: 16px; color: #374151; line-height: 1.6;">
-            If you ever want to stop receiving SMS messages, simply reply <strong>STOP</strong> to any text message from us.
+            You've been added to <strong>${orgName}</strong> as a guardian. You'll receive schedule updates and important announcements from your team.
           </p>
           <p style="margin: 0; font-size: 16px; color: #374151; line-height: 1.6;">
             If you have any questions, please reach out to your organization's coach or administrator.
@@ -100,9 +93,10 @@ export async function createGuardian(
         </td>
       </tr>
       <tr>
-        <td style="padding: 24px 40px 40px; border-top: 1px solid #e5e7eb;">
-          <p style="margin: 0; font-size: 12px; color: #9ca3af;">
-            This message was sent because you were added to ${orgName}. To opt out of SMS, reply STOP.
+        <td style="padding: 20px 40px 32px; border-top: 1px solid #e5e7eb;">
+          <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+            You received this email because you were added to ${orgName}.
+            <a href="${unsubscribeUrl}" style="color: #9ca3af;">Unsubscribe</a> from future emails.
           </p>
         </td>
       </tr>
@@ -110,11 +104,16 @@ export async function createGuardian(
   </body>
 </html>
         `.trim();
+        const unsubscribeHeaders = {
+          "List-Unsubscribe": `<${unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        };
 
         const result = await sendEmail(
           guardianEmail,
           `Welcome to ${orgName}!`,
           htmlBody,
+          unsubscribeHeaders,
         );
 
         if (!result.success) {
