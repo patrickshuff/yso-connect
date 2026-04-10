@@ -94,11 +94,10 @@ export function buildWelcomeEmail(params: WelcomeEmailParams): string {
   const header = standardHeader(orgName);
 
   const body = `
-    <h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#111827;">Welcome, ${escapeHtml(firstName)}!</h1>
-    <p style="margin:0 0 24px;font-size:15px;color:#6b7280;">You've been added to ${escapeHtml(orgName)}.</p>
+    <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#111827;">Welcome, ${escapeHtml(firstName)}!</h1>
 
     <p style="margin:0 0 16px;font-size:16px;color:#374151;line-height:1.7;">
-      Your coach or administrator has added you as a guardian in <strong>${escapeHtml(orgName)}</strong>.
+      You've been added as a guardian in <strong>${escapeHtml(orgName)}</strong>.
       You'll start receiving important updates — schedule changes, announcements, and messages from your team's coaching staff.
     </p>
 
@@ -135,7 +134,6 @@ export function buildWelcomeEmail(params: WelcomeEmailParams): string {
 }
 
 export interface BroadcastEmailParams {
-  firstName: string;
   orgName: string;
   subject: string | null;
   body: string;
@@ -144,7 +142,7 @@ export interface BroadcastEmailParams {
 }
 
 export function buildBroadcastEmail(params: BroadcastEmailParams): string {
-  const { firstName, orgName, subject, body, appUrl, guardianId } = params;
+  const { orgName, subject, body, appUrl, guardianId } = params;
   const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardianId}`;
 
   const header = standardHeader(orgName);
@@ -153,7 +151,6 @@ export function buildBroadcastEmail(params: BroadcastEmailParams): string {
 
   const bodyHtml = `
     ${subject ? `<h2 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#111827;">${escapeHtml(subject)}</h2>` : ""}
-    <p style="margin:0 0 8px;font-size:15px;color:#6b7280;">Hi ${escapeHtml(firstName)},</p>
     <p style="margin:0;font-size:16px;color:#374151;line-height:1.75;">${formattedBody}</p>
   `;
 

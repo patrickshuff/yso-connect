@@ -210,7 +210,6 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
       const unsubscribeUrl = `${appUrl}/api/unsubscribe?g=${guardian.id}`;
       const htmlBody = buildBroadcastEmail({
-        firstName: guardian.firstName,
         orgName,
         subject,
         body,
