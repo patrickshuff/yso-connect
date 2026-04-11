@@ -442,7 +442,7 @@ export default function OnboardingPage() {
                 Your 30-day free trial has started
               </p>
               <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                After your trial, continued access is $49/mo. You can set up billing anytime from your dashboard.
+                After your trial, continued access is $10 for 6 months. You can set up billing anytime from your dashboard.
               </p>
             </div>
 
