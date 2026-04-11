@@ -73,6 +73,12 @@ export function PhoneSignIn() {
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
     if (!signIn) return;
+
+    if (isSignedIn) {
+      router.replace("/dashboard");
+      return;
+    }
+
     setError(null);
 
     if (method === "phone") {

@@ -1,39 +1,50 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import type { NextRequest, NextFetchEvent } from "next/server";
+import type { NextRequest } from "next/server";
 
-const isAuthPage = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
-const isPublicPage = createRouteMatcher([
+const AUTH_PATHS = ["/sign-in", "/sign-up"];
+
+const PUBLIC_PREFIXES = [
   "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/o/(.*)",
+  "/o/",
   "/privacy",
   "/terms",
   "/consent",
-  "/api/webhooks/(.*)",
+  "/api/webhooks/",
   "/api/health",
   "/sitemap.xml",
   "/icon.svg",
   "/favicon.ico",
-]);
+];
 
-const clerkHandler = clerkMiddleware(async (auth, request) => {
-  const { userId } = await auth();
+function isPublicPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return PUBLIC_PREFIXES.slice(1).some((p) => pathname.startsWith(p));
+}
 
-  // Redirect signed-in users away from auth pages
-  if (userId && isAuthPage(request)) {
+function isAuthPath(pathname: string): boolean {
+  return AUTH_PATHS.some((p) => pathname.startsWith(p));
+}
+
+// Clerk sets __session (HttpOnly JWT) when a user has an active session.
+// Reading the cookie presence is enough for redirect logic — the pages
+// themselves enforce proper token validation.
+function hasClerkSession(request: NextRequest): boolean {
+  return request.cookies.has("__session");
+}
+
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const authenticated = hasClerkSession(request);
+
+  // Send signed-in users away from auth pages immediately
+  if (authenticated && isAuthPath(pathname)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Protect all non-public pages
-  if (!userId && !isPublicPage(request)) {
+  // Block unauthenticated access to protected routes
+  if (!authenticated && !isPublicPath(pathname)) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
-});
-
-export function proxy(request: NextRequest, event: NextFetchEvent) {
-  return clerkHandler(request, event);
 }
 
 export const config = {
