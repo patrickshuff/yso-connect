@@ -16,7 +16,6 @@ import {
   MessageSquare,
   Receipt,
   Settings,
-  LineChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +25,6 @@ interface SidebarNavProps {
 
 const navItems = [
   { label: "Overview", href: "", icon: LayoutDashboard },
-  { label: "KPI Dashboard", href: "/dashboard/kpi", icon: LineChart, absolute: true },
   { label: "Teams", href: "/teams", icon: Shield },
   { label: "Players", href: "/players", icon: Users },
   { label: "Guardians", href: "/guardians", icon: UserCheck },
@@ -48,11 +46,9 @@ export function SidebarNav({ orgId }: SidebarNavProps) {
   return (
     <nav className="flex flex-col gap-1 px-2 py-4">
       {navItems.map((item) => {
-        const fullPath = item.absolute ? item.href : `${basePath}${item.href}`;
+        const fullPath = `${basePath}${item.href}`;
         const isActive =
-          item.absolute
-            ? pathname === item.href
-            : item.href === ""
+          item.href === ""
             ? pathname === basePath
             : pathname.startsWith(fullPath);
 

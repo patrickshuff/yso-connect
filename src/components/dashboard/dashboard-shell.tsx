@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,12 +17,14 @@ import { SidebarNav } from "./sidebar-nav";
 interface DashboardShellProps {
   orgId: string;
   orgName: string;
+  isOwner: boolean;
   children: React.ReactNode;
 }
 
 export function DashboardShell({
   orgId,
   orgName,
+  isOwner,
   children,
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -70,7 +73,17 @@ export function DashboardShell({
               YSO Connect
             </h1>
           </div>
-          <UserButton />
+          <div className="flex items-center gap-3">
+            {isOwner && (
+              <Link
+                href="/admin"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                Admin
+              </Link>
+            )}
+            <UserButton />
+          </div>
         </header>
 
         {/* Page content */}

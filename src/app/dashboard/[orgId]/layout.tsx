@@ -35,8 +35,10 @@ export default async function OrgDashboardLayout({
     notFound();
   }
 
+  const isOwner = membership.role === "owner";
+
   return (
-    <DashboardShell orgId={orgId} orgName={org.name}>
+    <DashboardShell orgId={orgId} orgName={org.name} isOwner={isOwner}>
       <BillingGate
         orgId={orgId}
         subscriptionStatus={org.subscriptionStatus}

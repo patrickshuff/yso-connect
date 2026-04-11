@@ -1,8 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Download } from "lucide-react";
-import { getUserOrganizations } from "@/lib/memberships";
 import {
   Card,
   CardContent,
@@ -38,13 +37,6 @@ export default async function KpiDashboardPage() {
   const { userId } = await auth();
   if (!userId) {
     redirect("/sign-in");
-  }
-
-  // KPI dashboard shows platform-wide metrics — restrict to org owners
-  const userOrgs = await getUserOrganizations(userId);
-  const isOwner = userOrgs.some((org) => org.role === "owner");
-  if (!isOwner) {
-    notFound();
   }
 
   const [metrics, channels] = await Promise.all([
