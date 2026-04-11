@@ -25,7 +25,6 @@ export async function createTeam(
 
   const name = formData.get("name") as string | null;
   const seasonId = formData.get("seasonId") as string | null;
-  const divisionId = (formData.get("divisionId") as string | null) || null;
 
   if (!name || !seasonId) {
     return { success: false, error: "Name and season are required" };
@@ -37,7 +36,6 @@ export async function createTeam(
       organizationId: orgId,
       name,
       seasonId,
-      divisionId,
     })
     .returning();
 

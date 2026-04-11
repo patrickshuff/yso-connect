@@ -1,7 +1,7 @@
 import { eq, count, sql } from "drizzle-orm";
 import { Shield } from "lucide-react";
 import { db } from "@/db";
-import { teams, teamPlayers, seasons, divisions } from "@/db/schema";
+import { teams, teamPlayers, seasons } from "@/db/schema";
 import {
   Card,
   CardHeader,
@@ -13,39 +13,26 @@ import { Badge } from "@/components/ui/badge";
 import { AddTeamDialog } from "@/components/dashboard/add-team-dialog";
 
 async function getTeamsWithPlayerCount(orgId: string) {
-  const rows = await db
+  return db
     .select({
       id: teams.id,
       name: teams.name,
       seasonName: seasons.name,
-      divisionName: divisions.name,
       playerCount: count(teamPlayers.id),
-      createdAt: teams.createdAt,
     })
     .from(teams)
     .innerJoin(seasons, eq(teams.seasonId, seasons.id))
-    .leftJoin(divisions, eq(teams.divisionId, divisions.id))
     .leftJoin(teamPlayers, eq(teams.id, teamPlayers.teamId))
     .where(eq(teams.organizationId, orgId))
-    .groupBy(teams.id, seasons.name, divisions.name)
+    .groupBy(teams.id, seasons.name)
     .orderBy(sql`${teams.name} asc`);
-
-  return rows;
 }
 
-async function getSeasonsAndDivisions(orgId: string) {
-  const [orgSeasons, orgDivisions] = await Promise.all([
-    db
-      .select({ id: seasons.id, name: seasons.name })
-      .from(seasons)
-      .where(eq(seasons.organizationId, orgId)),
-    db
-      .select({ id: divisions.id, name: divisions.name })
-      .from(divisions)
-      .where(eq(divisions.organizationId, orgId)),
-  ]);
-
-  return { seasons: orgSeasons, divisions: orgDivisions };
+async function getOrgSeasons(orgId: string) {
+  return db
+    .select({ id: seasons.id, name: seasons.name })
+    .from(seasons)
+    .where(eq(seasons.organizationId, orgId));
 }
 
 export default async function TeamsPage({
@@ -54,11 +41,10 @@ export default async function TeamsPage({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const [teamRows, { seasons: orgSeasons, divisions: orgDivisions }] =
-    await Promise.all([
-      getTeamsWithPlayerCount(orgId),
-      getSeasonsAndDivisions(orgId),
-    ]);
+  const [teamRows, orgSeasons] = await Promise.all([
+    getTeamsWithPlayerCount(orgId),
+    getOrgSeasons(orgId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -71,11 +57,7 @@ export default async function TeamsPage({
             Manage your organization&apos;s teams.
           </p>
         </div>
-        <AddTeamDialog
-          orgId={orgId}
-          seasons={orgSeasons}
-          divisions={orgDivisions}
-        />
+        <AddTeamDialog orgId={orgId} seasons={orgSeasons} />
       </div>
 
       {teamRows.length === 0 ? (
@@ -95,11 +77,8 @@ export default async function TeamsPage({
             <Card key={team.id}>
               <CardHeader>
                 <CardTitle>{team.name}</CardTitle>
-                <CardDescription className="flex items-center gap-2">
+                <CardDescription>
                   <Badge variant="secondary">{team.seasonName}</Badge>
-                  {team.divisionName && (
-                    <Badge variant="outline">{team.divisionName}</Badge>
-                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>

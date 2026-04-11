@@ -20,21 +20,14 @@ interface Season {
   name: string;
 }
 
-interface Division {
-  id: string;
-  name: string;
-}
-
 interface AddTeamDialogProps {
   orgId: string;
   seasons: Season[];
-  divisions: Division[];
 }
 
 export function AddTeamDialog({
   orgId,
   seasons,
-  divisions,
 }: AddTeamDialogProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,22 +80,6 @@ export function AddTeamDialog({
               {seasons.map((season) => (
                 <option key={season.id} value={season.id}>
                   {season.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="team-division">Division (optional)</Label>
-            <select
-              id="team-division"
-              name="divisionId"
-              className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="">None</option>
-              {divisions.map((division) => (
-                <option key={division.id} value={division.id}>
-                  {division.name}
                 </option>
               ))}
             </select>
