@@ -1,38 +1,81 @@
-import { eq, count } from "drizzle-orm";
-import { Shield, Users, UserCheck, Plus, Upload } from "lucide-react";
+import { eq, count, sql, gte, asc } from "drizzle-orm";
+import { Plus, Upload, CalendarX } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/db";
-import { teams, players, guardians } from "@/db/schema";
+import { teams, teamPlayers, seasons, events } from "@/db/schema";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-async function getOrgStats(orgId: string) {
-  const [[teamResult], [playerResult], [guardianResult]] = await Promise.all([
-    db
-      .select({ value: count() })
-      .from(teams)
-      .where(eq(teams.organizationId, orgId)),
-    db
-      .select({ value: count() })
-      .from(players)
-      .where(eq(players.organizationId, orgId)),
-    db
-      .select({ value: count() })
-      .from(guardians)
-      .where(eq(guardians.organizationId, orgId)),
-  ]);
+async function getTeamsWithPlayerCount(orgId: string) {
+  return db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      seasonName: seasons.name,
+      playerCount: count(teamPlayers.id),
+    })
+    .from(teams)
+    .innerJoin(seasons, eq(teams.seasonId, seasons.id))
+    .leftJoin(teamPlayers, eq(teams.id, teamPlayers.teamId))
+    .where(eq(teams.organizationId, orgId))
+    .groupBy(teams.id, seasons.name)
+    .orderBy(sql`${teams.name} asc`);
+}
 
-  return {
-    teamCount: teamResult.value,
-    playerCount: playerResult.value,
-    guardianCount: guardianResult.value,
-  };
+async function getUpcomingEvents(orgId: string) {
+  return db
+    .select({
+      id: events.id,
+      title: events.title,
+      eventType: events.eventType,
+      startTime: events.startTime,
+      location: events.location,
+      teamName: teams.name,
+    })
+    .from(events)
+    .leftJoin(teams, eq(events.teamId, teams.id))
+    .where(
+      sql`${events.organizationId} = ${orgId}
+        AND ${events.isCancelled} = false
+        AND ${events.startTime} >= now()`
+    )
+    .orderBy(asc(events.startTime))
+    .limit(8);
+}
+
+function formatEventDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/New_York",
+  });
+}
+
+function eventTypeLabel(type: string): string {
+  switch (type) {
+    case "game": return "Game";
+    case "practice": return "Practice";
+    case "tournament": return "Tournament";
+    case "meeting": return "Meeting";
+    default: return type;
+  }
 }
 
 export default async function OrgOverviewPage({
@@ -41,28 +84,10 @@ export default async function OrgOverviewPage({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const stats = await getOrgStats(orgId);
-
-  const statCards = [
-    {
-      label: "Teams",
-      value: stats.teamCount,
-      icon: Shield,
-      href: `/dashboard/${orgId}/teams`,
-    },
-    {
-      label: "Players",
-      value: stats.playerCount,
-      icon: Users,
-      href: `/dashboard/${orgId}/players`,
-    },
-    {
-      label: "Guardians",
-      value: stats.guardianCount,
-      icon: UserCheck,
-      href: `/dashboard/${orgId}/guardians`,
-    },
-  ];
+  const [teamRows, upcomingEvents] = await Promise.all([
+    getTeamsWithPlayerCount(orgId),
+    getUpcomingEvents(orgId),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -75,35 +100,126 @@ export default async function OrgOverviewPage({
         </p>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {statCards.map((stat) => (
-          <Link key={stat.label} href={stat.href}>
-            <Card className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <CardDescription className="flex items-center gap-2">
-                  <stat.icon className="size-4" />
-                  {stat.label}
-                </CardDescription>
-                <CardTitle className="text-3xl">{stat.value}</CardTitle>
-              </CardHeader>
-            </Card>
+      {/* Teams table */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Teams
+          </h3>
+          <Link href={`/dashboard/${orgId}/teams`}>
+            <Button variant="outline" size="sm">
+              <Plus className="size-4" data-icon="inline-start" />
+              Add Team
+            </Button>
           </Link>
-        ))}
+        </div>
+        {teamRows.length === 0 ? (
+          <Card>
+            <CardContent>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No teams yet.{" "}
+                <Link href={`/dashboard/${orgId}/teams`} className="underline underline-offset-2">
+                  Create your first team.
+                </Link>
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Team</TableHead>
+                    <TableHead>Season</TableHead>
+                    <TableHead>Players</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {teamRows.map((team) => (
+                    <TableRow key={team.id}>
+                      <TableCell className="font-medium">{team.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{team.seasonName}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {team.playerCount} {team.playerCount === 1 ? "player" : "players"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* Quick actions */}
+      {/* Upcoming Events */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Upcoming Events
+          </h3>
+          <Link href={`/dashboard/${orgId}/events`}>
+            <Button variant="outline" size="sm">
+              <Plus className="size-4" data-icon="inline-start" />
+              Add Event
+            </Button>
+          </Link>
+        </div>
+        {upcomingEvents.length === 0 ? (
+          <Card>
+            <CardContent>
+              <div className="flex flex-col items-center gap-2 py-8">
+                <CalendarX className="size-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No upcoming events scheduled.</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Event</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Team</TableHead>
+                    <TableHead>When</TableHead>
+                    <TableHead>Location</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {upcomingEvents.map((event) => (
+                    <TableRow key={event.id}>
+                      <TableCell className="font-medium">{event.title}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{eventTypeLabel(event.eventType)}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {event.teamName ?? <span className="text-zinc-400">—</span>}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
+                        {formatEventDate(event.startTime)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {event.location ?? <span className="text-zinc-400">—</span>}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Quick Actions */}
       <div>
         <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
           Quick Actions
         </h3>
         <div className="flex flex-wrap gap-3">
-          <Link href={`/dashboard/${orgId}/teams`}>
-            <Button variant="outline">
-              <Plus className="size-4" data-icon="inline-start" />
-              Add Team
-            </Button>
-          </Link>
           <Link href={`/dashboard/${orgId}/players`}>
             <Button variant="outline">
               <Plus className="size-4" data-icon="inline-start" />
@@ -117,20 +233,6 @@ export default async function OrgOverviewPage({
             </Button>
           </Link>
         </div>
-      </div>
-
-      {/* Recent activity placeholder */}
-      <div>
-        <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          Recent Activity
-        </h3>
-        <Card>
-          <CardContent>
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No recent activity to display.
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
