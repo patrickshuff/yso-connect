@@ -74,29 +74,15 @@ export function PhoneSignUp() {
     setError(null);
 
     if (method === "phone") {
-      const { error: createErr } = await signUp.create({
-        phoneNumber: toE164(displayPhone),
-      });
-      if (createErr) {
-        setError(createErr.message);
-        return;
-      }
+      const { error: createErr } = await signUp.create({ phoneNumber: toE164(displayPhone) });
+      if (createErr) { setError(createErr.message); return; }
       const { error: sendErr } = await signUp.verifications.sendPhoneCode();
-      if (sendErr) {
-        setError(sendErr.message);
-        return;
-      }
+      if (sendErr) { setError(sendErr.message); return; }
     } else {
       const { error: createErr } = await signUp.create({ emailAddress: email });
-      if (createErr) {
-        setError(createErr.message);
-        return;
-      }
-      const { error: sendErr2 } = await signUp.verifications.sendEmailCode();
-      if (sendErr2) {
-        setError(sendErr2.message);
-        return;
-      }
+      if (createErr) { setError(createErr.message); return; }
+      const { error: sendErr } = await signUp.verifications.sendEmailCode();
+      if (sendErr) { setError(sendErr.message); return; }
     }
 
     setStep("otp");
@@ -108,24 +94,20 @@ export function PhoneSignUp() {
     setError(null);
 
     if (method === "phone") {
-      const { error: verifyErr } = await signUp.verifications.verifyPhoneCode({
-        code: otp,
-      });
-      if (verifyErr) {
-        setError(verifyErr.message);
-        return;
-      }
+      const { error: verifyErr } = await signUp.verifications.verifyPhoneCode({ code: otp });
+      if (verifyErr) { setError(verifyErr.message); return; }
     } else {
-      const { error: verifyErr2 } = await signUp.verifications.verifyEmailCode({ code: otp });
-      if (verifyErr2) {
-        setError(verifyErr2.message);
-        return;
-      }
+      const { error: verifyErr } = await signUp.verifications.verifyEmailCode({ code: otp });
+      if (verifyErr) { setError(verifyErr.message); return; }
     }
 
-    // signUp.status is a stale closure value at this point — verification
-    // updates Clerk's internal state but the React hook hasn't re-rendered yet.
-    // Proceed directly to finalize(); it will return an error if incomplete.
+    // signUp is a reactive signal in Clerk v7 — status reflects current state after await
+    if (signUp.status !== "complete") {
+      const missing = (signUp.missingFields ?? []).join(", ");
+      setError(missing ? `Needs: ${missing}` : "Sign-up incomplete. Please try again.");
+      return;
+    }
+
     const { error: finalizeErr } = await signUp.finalize({
       navigate: ({ decorateUrl }) => {
         const url = decorateUrl("/dashboard");
