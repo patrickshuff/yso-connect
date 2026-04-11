@@ -69,11 +69,6 @@ export function AddPlayerDialog({ orgId }: AddPlayerDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="player-dob">Date of Birth (optional)</Label>
-            <Input id="player-dob" name="dateOfBirth" type="date" />
-          </div>
-
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}

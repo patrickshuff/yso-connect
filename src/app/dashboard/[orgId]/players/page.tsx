@@ -4,30 +4,36 @@ import { db } from "@/db";
 import { players, playerGuardians, guardians } from "@/db/schema";
 import {
   Card,
-  CardHeader,
-  CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AddPlayerDialog } from "@/components/dashboard/add-player-dialog";
 
-interface PlayerWithGuardians {
+interface Guardian {
+  name: string;
+  phone: string | null;
+}
+
+interface PlayerRow {
   id: string;
   firstName: string;
   lastName: string;
-  dateOfBirth: string | null;
-  guardianNames: string[];
+  guardians: Guardian[];
 }
 
-async function getPlayersWithGuardians(
-  orgId: string
-): Promise<PlayerWithGuardians[]> {
+async function getPlayersWithGuardians(orgId: string): Promise<PlayerRow[]> {
   const allPlayers = await db
     .select({
       id: players.id,
       firstName: players.firstName,
       lastName: players.lastName,
-      dateOfBirth: players.dateOfBirth,
     })
     .from(players)
     .where(eq(players.organizationId, orgId))
@@ -40,23 +46,24 @@ async function getPlayersWithGuardians(
   const guardianLinks = await db
     .select({
       playerId: playerGuardians.playerId,
-      guardianFirstName: guardians.firstName,
-      guardianLastName: guardians.lastName,
+      firstName: guardians.firstName,
+      lastName: guardians.lastName,
+      phone: guardians.phone,
     })
     .from(playerGuardians)
     .innerJoin(guardians, eq(playerGuardians.guardianId, guardians.id))
     .where(inArray(playerGuardians.playerId, playerIds));
 
-  const guardiansByPlayer = new Map<string, string[]>();
+  const guardiansByPlayer = new Map<string, Guardian[]>();
   for (const link of guardianLinks) {
-    const names = guardiansByPlayer.get(link.playerId) ?? [];
-    names.push(`${link.guardianFirstName} ${link.guardianLastName}`);
-    guardiansByPlayer.set(link.playerId, names);
+    const list = guardiansByPlayer.get(link.playerId) ?? [];
+    list.push({ name: `${link.firstName} ${link.lastName}`, phone: link.phone });
+    guardiansByPlayer.set(link.playerId, list);
   }
 
   return allPlayers.map((p) => ({
     ...p,
-    guardianNames: guardiansByPlayer.get(p.id) ?? [],
+    guardians: guardiansByPlayer.get(p.id) ?? [],
   }));
 }
 
@@ -94,38 +101,38 @@ export default async function PlayersPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {playerRows.map((player) => (
-            <Card key={player.id}>
-              <CardHeader>
-                <CardTitle>
-                  {player.firstName} {player.lastName}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {player.dateOfBirth && (
-                  <p className="text-sm text-muted-foreground">
-                    DOB: {player.dateOfBirth}
-                  </p>
-                )}
-                {player.guardianNames.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {player.guardianNames.map((name) => (
-                      <Badge key={name} variant="secondary">
-                        {name}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                {player.guardianNames.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No guardians linked
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Player</TableHead>
+                  <TableHead>Guardian 1</TableHead>
+                  <TableHead>Guardian 1 Phone</TableHead>
+                  <TableHead>Guardian 2</TableHead>
+                  <TableHead>Guardian 2 Phone</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {playerRows.map((player) => {
+                  const g1 = player.guardians[0];
+                  const g2 = player.guardians[1];
+                  return (
+                    <TableRow key={player.id}>
+                      <TableCell className="font-medium">
+                        {player.firstName} {player.lastName}
+                      </TableCell>
+                      <TableCell>{g1?.name ?? <span className="text-muted-foreground">—</span>}</TableCell>
+                      <TableCell>{g1?.phone ?? <span className="text-muted-foreground">—</span>}</TableCell>
+                      <TableCell>{g2?.name ?? <span className="text-muted-foreground">—</span>}</TableCell>
+                      <TableCell>{g2?.phone ?? <span className="text-muted-foreground">—</span>}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

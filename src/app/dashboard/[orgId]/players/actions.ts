@@ -25,7 +25,6 @@ export async function createPlayer(
 
   const firstName = formData.get("firstName") as string | null;
   const lastName = formData.get("lastName") as string | null;
-  const dateOfBirth = (formData.get("dateOfBirth") as string | null) || null;
 
   if (!firstName || !lastName) {
     return { success: false, error: "First and last name are required" };
@@ -37,7 +36,6 @@ export async function createPlayer(
       organizationId: orgId,
       firstName,
       lastName,
-      dateOfBirth,
     })
     .returning();
 
