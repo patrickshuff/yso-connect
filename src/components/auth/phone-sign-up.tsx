@@ -123,11 +123,9 @@ export function PhoneSignUp() {
       }
     }
 
-    if (signUp.status !== "complete") {
-      setError("Sign-up incomplete. Please try again.");
-      return;
-    }
-
+    // signUp.status is a stale closure value at this point — verification
+    // updates Clerk's internal state but the React hook hasn't re-rendered yet.
+    // Proceed directly to finalize(); it will return an error if incomplete.
     const { error: finalizeErr } = await signUp.finalize({
       navigate: ({ decorateUrl }) => {
         const url = decorateUrl("/dashboard");
