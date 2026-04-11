@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { getFormsWithStats } from "./actions";
 import { getMembership } from "@/lib/memberships";
 import { CreateFormDialog } from "@/components/dashboard/create-form-dialog";
@@ -14,7 +13,7 @@ export default async function FormsPage({
   const { userId } = await auth();
 
   if (!userId) {
-    redirect("/sign-in");
+    throw new Error("Unauthorized");
   }
 
   const [formRows, membership] = await Promise.all([

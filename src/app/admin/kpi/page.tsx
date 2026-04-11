@@ -1,6 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Download } from "lucide-react";
 import {
   Card,
@@ -34,11 +32,6 @@ function formatRate(numerator: number, denominator: number): string {
 }
 
 export default async function KpiDashboardPage() {
-  const { userId } = await auth();
-  if (!userId) {
-    redirect("/sign-in");
-  }
-
   const [metrics, channels] = await Promise.all([
     getWeeklyKpiMetrics(),
     getCurrentLeadChannelBreakdown(),

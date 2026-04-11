@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
@@ -18,7 +18,9 @@ export default async function OrgDashboardLayout({
   const { userId } = await auth();
 
   if (!userId) {
-    redirect("/sign-in");
+    // Middleware handles the primary redirect with UTM preservation.
+    // This is a safety fallback.
+    throw new Error("Unauthorized");
   }
 
   const [org] = await db

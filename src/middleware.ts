@@ -12,9 +12,12 @@ const PUBLIC_PREFIXES = [
   "/api/webhooks/",
   "/api/health",
   "/api/cron/",
+  "/api/analytics/",
   "/sitemap.xml",
   "/icon.svg",
   "/favicon.ico",
+  "/sign-in",
+  "/sign-up",
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -33,7 +36,7 @@ function hasClerkSession(request: NextRequest): boolean {
   return request.cookies.has("__session");
 }
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const authenticated = hasClerkSession(request);
 
@@ -45,6 +48,7 @@ export function proxy(request: NextRequest) {
   // Block unauthenticated access to protected routes
   if (!authenticated && !isPublicPath(pathname)) {
     const signInUrl = new URL("/sign-in", request.url);
+    // Preserving the full original URL including search params for attribution
     const redirectUrl = `${pathname}${search}`;
     signInUrl.searchParams.set("redirect_url", redirectUrl);
     return NextResponse.redirect(signInUrl);

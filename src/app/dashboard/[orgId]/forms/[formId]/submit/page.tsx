@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -15,7 +15,7 @@ export default async function FormSubmitPage({
   const { userId } = await auth();
 
   if (!userId) {
-    redirect("/sign-in");
+    throw new Error("Unauthorized");
   }
 
   const form = await getFormDetail(orgId, formId);

@@ -8,8 +8,10 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const { userId } = await auth();
+  
   if (!userId) {
-    redirect("/sign-in");
+    // Middleware handles the primary redirect with UTM preservation.
+    throw new Error("Unauthorized");
   }
 
   const orgs = await getUserOrganizations(userId);
