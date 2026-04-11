@@ -1,5 +1,16 @@
 # YSO Connect - Project History
 
+## 2026-04-10 - Fix production auth redirects and attribution
+
+### What changed
+- **Standardized Middleware**: Renamed `src/proxy.ts` to `src/middleware.ts` and added `export default` to comply with Next.js standards. This ensures the middleware actually runs in production and dev environments.
+- **Unblocked Cron/Analytics**: Updated `isPublicPath` logic to be more robust, ensuring `/api/cron/*` and `/api/analytics/*` routes are never intercepted by auth redirects. This prevents 307 redirects to `/sign-in` for headless cron jobs.
+- **Fixed UTM Attribution**: The middleware now copies `utm_` parameters from the original request directly onto the `/sign-in` URL. This allows the sign-in page (and its analytics) to track the source of the traffic even before the user signs in.
+- **Improved Authenticated Redirects**: When an already-signed-in user hits `/sign-in` or `/sign-up`, they are now redirected to the `redirect_url` if provided, and all UTM parameters are preserved on the target URL.
+- **Comprehensive Tests**: Updated `src/proxy.test.ts` to use the new `middleware` and added exhaustive test cases for UTM preservation, `redirect_url` handling, and public route exemption.
+
+---
+
 ## 2026-04-09 - Form management and preview env setup
 
 ### What changed
