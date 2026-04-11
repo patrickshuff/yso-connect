@@ -34,11 +34,12 @@ export async function createCoachCheckoutSession(
           currency: "usd",
           product_data: {
             name: "YSO Connect Starter Plan",
-            description: "Up to 10 teams — cancel anytime",
+            description: "$10 for 6 months — cancel anytime",
           },
-          unit_amount: 4900,
+          unit_amount: 1000,
           recurring: {
             interval: "month",
+            interval_count: 6,
           },
         },
         quantity: 1,

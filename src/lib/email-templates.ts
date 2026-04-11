@@ -161,6 +161,115 @@ export function buildBroadcastEmail(params: BroadcastEmailParams): string {
   return baseLayout(header, bodyHtml, footer);
 }
 
+export interface TrialReminder7dEmailParams {
+  orgName: string;
+  orgId: string;
+  appUrl: string;
+}
+
+export function buildTrialReminder7dEmail(params: TrialReminder7dEmailParams): string {
+  const { orgName, orgId, appUrl } = params;
+  const billingUrl = `${appUrl}/dashboard/${orgId}/billing?utm_source=email&utm_medium=trial_reminder&utm_campaign=trial_7d`;
+
+  const header = standardHeader(orgName);
+
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#111827;">You&rsquo;re one week in</h1>
+
+    <p style="margin:0 0 16px;font-size:16px;color:#374151;line-height:1.7;">
+      <strong>${escapeHtml(orgName)}</strong> has been on YSO Connect for a week.
+      Here&rsquo;s what that means for your families: schedules in their pockets,
+      messages that actually reach them, and one less thing to chase down.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0;background-color:${BRAND_BLUE_LIGHT};border-left:4px solid ${BRAND_BLUE};border-radius:4px;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0;font-size:14px;font-weight:600;color:${BRAND_BLUE};">What you&rsquo;ve unlocked</p>
+          <ul style="margin:8px 0 0;padding-left:20px;font-size:14px;color:#374151;line-height:1.8;">
+            <li>Teams and rosters organized</li>
+            <li>Game and practice schedules published</li>
+            <li>Guardian notifications working</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0 0 24px;font-size:16px;color:#374151;line-height:1.7;">
+      Keep everything running when your 30-day trial ends.
+      YSO Connect is <strong>$10 for 6 months</strong> &mdash; less than $2/month to keep your whole program connected.
+    </p>
+
+    <table cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="background-color:${BRAND_BLUE};border-radius:6px;">
+          <a href="${billingUrl}" style="display:inline-block;padding:12px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;">Continue with YSO Connect &mdash; $10 for 6 months</a>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  const footer = `<p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
+    You are receiving this email as the administrator of <strong>${escapeHtml(orgName)}</strong>.
+    These reminders stop automatically once you subscribe or your trial ends.
+  </p>`;
+
+  return baseLayout(header, body, footer);
+}
+
+export interface TrialReminder25dEmailParams {
+  orgName: string;
+  orgId: string;
+  appUrl: string;
+  daysRemaining: number;
+}
+
+export function buildTrialReminder25dEmail(params: TrialReminder25dEmailParams): string {
+  const { orgName, orgId, appUrl, daysRemaining } = params;
+  const billingUrl = `${appUrl}/dashboard/${orgId}/billing?utm_source=email&utm_medium=trial_reminder&utm_campaign=trial_25d`;
+  const dayLabel = daysRemaining === 1 ? "day" : "days";
+
+  const header = standardHeader(orgName);
+
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#111827;">${daysRemaining} ${dayLabel} left on your trial</h1>
+
+    <p style="margin:0 0 16px;font-size:16px;color:#374151;line-height:1.7;">
+      Your YSO Connect trial for <strong>${escapeHtml(orgName)}</strong> ends in ${daysRemaining} ${dayLabel}.
+      Everything you&rsquo;ve built &mdash; your teams, your schedule, your guardian contacts &mdash;
+      stays exactly where it is when you subscribe.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0;background-color:${BRAND_BLUE_LIGHT};border-left:4px solid ${BRAND_BLUE};border-radius:4px;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:${BRAND_BLUE};">$10 for 6 months</p>
+          <p style="margin:0;font-size:14px;color:#374151;">Less than $2/month &mdash; cancel anytime</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0 0 24px;font-size:16px;color:#374151;line-height:1.7;">
+      Subscribe before your trial ends and your families won&rsquo;t miss a beat.
+    </p>
+
+    <table cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="background-color:${BRAND_BLUE};border-radius:6px;">
+          <a href="${billingUrl}" style="display:inline-block;padding:12px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;">Subscribe &mdash; $10 for 6 months</a>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  const footer = `<p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
+    You are receiving this email as the administrator of <strong>${escapeHtml(orgName)}</strong>.
+    These reminders stop automatically once you subscribe or your trial ends.
+  </p>`;
+
+  return baseLayout(header, body, footer);
+}
+
 export interface PaymentFailedEmailParams {
   orgName: string;
   appUrl: string;
