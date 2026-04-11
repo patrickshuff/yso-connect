@@ -9,6 +9,7 @@ export const teams = pgTable("teams", {
   seasonId: uuid("season_id").notNull().references(() => seasons.id, { onDelete: "cascade" }),
   divisionId: uuid("division_id").references(() => divisions.id, { onDelete: "set null" }),
   name: varchar("name", { length: 255 }).notNull(),
+  sport: varchar("sport", { length: 255 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 }, (table) => [

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 type Method = "phone" | "email";
-type Step = "identifier" | "otp";
+type Step = "identifier" | "otp" | "profile";
 
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
@@ -42,6 +42,8 @@ export function PhoneSignUp() {
   const [displayPhone, setDisplayPhone] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const loading = fetchStatus === "fetching";
@@ -108,6 +110,20 @@ export function PhoneSignUp() {
       return;
     }
 
+    setStep("profile");
+  }
+
+  async function handleFinalize(e: React.FormEvent) {
+    e.preventDefault();
+    if (!signUp) return;
+    setError(null);
+
+    const { error: updateErr } = await signUp.update({ firstName, lastName });
+    if (updateErr) {
+      setError(updateErr.message);
+      return;
+    }
+
     const { error: finalizeErr } = await signUp.finalize({
       navigate: ({ decorateUrl }) => {
         const url = decorateUrl("/dashboard");
@@ -132,7 +148,9 @@ export function PhoneSignUp() {
         <CardDescription>
           {step === "identifier"
             ? "Enter your phone number or email to get started."
-            : `We sent a 6-digit code to ${sentTo}.`}
+            : step === "otp"
+              ? `We sent a 6-digit code to ${sentTo}.`
+              : "Almost done! Tell us your name."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -163,7 +181,7 @@ export function PhoneSignUp() {
           </div>
         )}
 
-        {step === "identifier" ? (
+        {step === "identifier" && (
           <form onSubmit={handleSendCode} className="flex flex-col gap-4">
             {method === "phone" ? (
               <div className="flex flex-col gap-1.5">
@@ -204,7 +222,9 @@ export function PhoneSignUp() {
               {loading ? "Sending…" : "Send code"}
             </Button>
           </form>
-        ) : (
+        )}
+
+        {step === "otp" && (
           <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="otp">One-time code</Label>
@@ -238,6 +258,39 @@ export function PhoneSignUp() {
               }}
             >
               {method === "phone" ? "Use a different number" : "Use a different email"}
+            </Button>
+          </form>
+        )}
+
+        {step === "profile" && (
+          <form onSubmit={handleFinalize} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                type="text"
+                placeholder="Jane"
+                value={firstName}
+                onChange={(e) => { setFirstName(e.target.value); setError(null); }}
+                autoComplete="given-name"
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                type="text"
+                placeholder="Smith"
+                value={lastName}
+                onChange={(e) => { setLastName(e.target.value); setError(null); }}
+                autoComplete="family-name"
+                required
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" disabled={loading || !firstName || !lastName}>
+              {loading ? "Saving…" : "Continue"}
             </Button>
           </form>
         )}

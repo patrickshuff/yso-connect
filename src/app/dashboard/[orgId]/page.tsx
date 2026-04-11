@@ -20,6 +20,7 @@ async function getTeamsWithPlayerCount(orgId: string) {
     .select({
       id: teams.id,
       name: teams.name,
+      sport: teams.sport,
       seasonName: seasons.name,
       playerCount: count(teamPlayers.id),
     })
@@ -127,15 +128,26 @@ export default async function OrgOverviewPage({
                   <TableRow>
                     <TableHead>Team</TableHead>
                     <TableHead>Season</TableHead>
+                    <TableHead>Sport</TableHead>
                     <TableHead>Players</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {teamRows.map((team) => (
                     <TableRow key={team.id}>
-                      <TableCell className="font-medium">{team.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link
+                          href={`/dashboard/${orgId}/teams/${team.id}`}
+                          className="hover:underline underline-offset-2"
+                        >
+                          {team.name}
+                        </Link>
+                      </TableCell>
                       <TableCell>
                         <Badge variant="secondary">{team.seasonName}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {team.sport ?? <span className="text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {team.playerCount} {team.playerCount === 1 ? "player" : "players"}

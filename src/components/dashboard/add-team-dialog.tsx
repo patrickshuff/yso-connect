@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+
+const SPORTS = ["Baseball", "Basketball", "Football", "Soccer", "Softball", "T-Ball", "Other"] as const;
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +68,20 @@ export function AddTeamDialog({
               placeholder="e.g. Blue Jays U12"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="team-sport">Sport</Label>
+            <select
+              id="team-sport"
+              name="sport"
+              className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Select a sport</option>
+              {SPORTS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">

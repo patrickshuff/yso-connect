@@ -17,6 +17,7 @@ async function getTeamsWithPlayerCount(orgId: string) {
     .select({
       id: teams.id,
       name: teams.name,
+      sport: teams.sport,
       seasonName: seasons.name,
       playerCount: count(teamPlayers.id),
     })
@@ -77,8 +78,9 @@ export default async function TeamsPage({
             <Card key={team.id}>
               <CardHeader>
                 <CardTitle>{team.name}</CardTitle>
-                <CardDescription>
+                <CardDescription className="flex flex-wrap gap-1">
                   <Badge variant="secondary">{team.seasonName}</Badge>
+                  {team.sport && <Badge variant="outline">{team.sport}</Badge>}
                 </CardDescription>
               </CardHeader>
               <CardContent>

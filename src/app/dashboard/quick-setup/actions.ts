@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { organizations, seasons, sports, teams } from "@/db/schema";
 import { createMembership } from "@/lib/memberships";
@@ -28,6 +28,10 @@ export async function quickSetupTeam(
     return { success: false, error: "Unauthorized" };
   }
 
+  const clerk = await clerkClient();
+  const user = await clerk.users.getUser(userId);
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+
   if (!teamName.trim()) {
     return { success: false, error: "Team name is required" };
   }
@@ -40,7 +44,7 @@ export async function quickSetupTeam(
     return { success: false, error: "Season name is required" };
   }
 
-  const orgName = `${teamName.trim()} Team`;
+  const orgName = displayName ? displayName : teamName.trim();
   const slug = slugify(orgName) + "-" + Date.now().toString(36);
 
   const trialEndsAt = new Date();

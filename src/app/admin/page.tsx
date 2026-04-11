@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LineChart } from "lucide-react";
+import { BellRing, LineChart } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -26,6 +26,19 @@ export default function AdminPage() {
               <CardTitle className="text-base">KPI Dashboard</CardTitle>
               <CardDescription>
                 Weekly funnel metrics, conversion rates, and lead attribution.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+        <Link href="/admin/operations">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer">
+            <CardHeader>
+              <div className="mb-2 flex size-9 items-center justify-center rounded-lg bg-amber-100">
+                <BellRing className="size-5 text-amber-700" />
+              </div>
+              <CardTitle className="text-base">Operations Dashboard</CardTitle>
+              <CardDescription>
+                Monitor reminders, messaging delivery health, and subscription payment failures.
               </CardDescription>
             </CardHeader>
           </Card>
