@@ -437,6 +437,15 @@ export default function OnboardingPage() {
               </div>
             </div>
 
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Your 30-day free trial has started
+              </p>
+              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                After your trial, continued access is $49/mo. You can set up billing anytime from your dashboard.
+              </p>
+            </div>
+
             <div className="mt-8 flex justify-end">
               <Button onClick={handleGoToDashboard}>
                 Go to Dashboard

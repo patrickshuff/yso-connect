@@ -8,6 +8,9 @@ interface WindowMetrics {
   signupSubmissions: number;
   orgActivations: number;
   leadRecords: number;
+  billingPageViews: number;
+  checkoutInitiated: number;
+  paymentsCompleted: number;
 }
 
 export interface WeeklyKpiMetrics {
@@ -67,6 +70,9 @@ async function getWindowMetrics(start: Date, end: Date): Promise<WindowMetrics> 
     signupSubmissions,
     orgActivations,
     leadRecords,
+    billingPageViews,
+    checkoutInitiated,
+    paymentsCompleted,
   ] = await Promise.all([
     countFunnelEvent("funnel_landing_cta_click", start, end),
     countFunnelEvent("funnel_signup_page_view", start, end),
@@ -85,6 +91,9 @@ async function getWindowMetrics(start: Date, end: Date): Promise<WindowMetrics> 
 
       return toNumber(row?.value);
     })(),
+    countFunnelEvent("funnel_billing_page_view", start, end),
+    countFunnelEvent("funnel_checkout_initiated", start, end),
+    countFunnelEvent("checkout_completed", start, end),
   ]);
 
   return {
@@ -93,6 +102,9 @@ async function getWindowMetrics(start: Date, end: Date): Promise<WindowMetrics> 
     signupSubmissions,
     orgActivations,
     leadRecords,
+    billingPageViews,
+    checkoutInitiated,
+    paymentsCompleted,
   };
 }
 

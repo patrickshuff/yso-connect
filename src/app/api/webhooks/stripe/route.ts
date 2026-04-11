@@ -130,6 +130,8 @@ async function handleCoachBillingPayment(
       updatedAt: new Date(),
     })
     .where(eq(organizations.id, orgId));
+
+  await logBillingFunnelEvent("checkout_completed", orgId);
 }
 
 async function handleSubscriptionEvent(event: Stripe.Event): Promise<void> {
@@ -250,7 +252,7 @@ async function notifyPaymentFailed(orgId: string): Promise<void> {
 }
 
 async function logBillingFunnelEvent(
-  eventName: "payment_failed" | "subscription_canceled",
+  eventName: "payment_failed" | "subscription_canceled" | "checkout_completed",
   organizationId: string,
 ): Promise<void> {
   await db.insert(funnelEvents).values({

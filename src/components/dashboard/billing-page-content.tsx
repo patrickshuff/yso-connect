@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, CreditCard, XCircle } from "lucide-react";
 import { createCoachCheckoutSession } from "@/app/dashboard/[orgId]/billing/actions";
+import { trackFunnelEvent } from "@/lib/gtm";
 
 interface BillingPageContentProps {
   orgId: string;
@@ -96,6 +97,10 @@ export function BillingPageContent({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    trackFunnelEvent("funnel_billing_page_view", { location: "billing_page" });
+  }, []);
+
   const daysRemaining = getTrialDaysRemaining(trialEndsAt);
   const isTrialRunning =
     subscriptionStatus === "trial" &&
@@ -110,6 +115,7 @@ export function BillingPageContent({
     setLoading(true);
     setError(null);
 
+    trackFunnelEvent("funnel_checkout_initiated", { location: "billing_page" });
     const result = await createCoachCheckoutSession(orgId);
     if (result.success && result.url) {
       window.location.href = result.url;

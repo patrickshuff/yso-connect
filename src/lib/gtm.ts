@@ -2,7 +2,10 @@ export type FunnelEventName =
   | "funnel_landing_cta_click"
   | "funnel_signup_page_view"
   | "funnel_signup_submitted"
-  | "funnel_org_activation";
+  | "funnel_org_activation"
+  | "funnel_billing_page_view"
+  | "funnel_checkout_initiated"
+  | "funnel_checkout_completed";
 
 export interface FunnelEventPayload {
   organizationId?: string;

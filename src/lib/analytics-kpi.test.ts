@@ -121,8 +121,8 @@ describe("getWeeklyKpiMetrics", () => {
 
     await getWeeklyKpiMetrics();
 
-    // 4 funnel event queries per window x 2 windows = 8 calls to whereFunnelMock
-    expect(whereFunnelMock).toHaveBeenCalledTimes(8);
+    // 7 funnel event queries per window x 2 windows = 14 calls to whereFunnelMock
+    expect(whereFunnelMock).toHaveBeenCalledTimes(14);
     // 1 interestSubmissions query per window x 2 windows = 2 calls
     expect(whereSubmissionsMock).toHaveBeenCalledTimes(2);
   });

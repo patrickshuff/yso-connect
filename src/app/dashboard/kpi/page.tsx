@@ -73,6 +73,21 @@ export default async function KpiDashboardPage() {
       current: metrics.current.orgActivations,
       previous: metrics.previous.orgActivations,
     },
+    {
+      label: "Billing Page Views",
+      current: metrics.current.billingPageViews,
+      previous: metrics.previous.billingPageViews,
+    },
+    {
+      label: "Checkout Initiated",
+      current: metrics.current.checkoutInitiated,
+      previous: metrics.previous.checkoutInitiated,
+    },
+    {
+      label: "Payments Completed",
+      current: metrics.current.paymentsCompleted,
+      previous: metrics.previous.paymentsCompleted,
+    },
   ];
 
   return (
@@ -115,7 +130,7 @@ export default async function KpiDashboardPage() {
             <CardTitle>Funnel Conversion</CardTitle>
             <CardDescription>Current 7-day window conversion rates.</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3">
+          <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border p-4">
               <p className="text-xs text-muted-foreground">CTA to Signup View</p>
               <p className="mt-2 text-2xl font-semibold">
@@ -140,6 +155,15 @@ export default async function KpiDashboardPage() {
                 {formatRate(
                   metrics.current.orgActivations,
                   metrics.current.signupSubmissions,
+                )}
+              </p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-xs text-muted-foreground">Activation to Payment</p>
+              <p className="mt-2 text-2xl font-semibold">
+                {formatRate(
+                  metrics.current.paymentsCompleted,
+                  metrics.current.orgActivations,
                 )}
               </p>
             </div>

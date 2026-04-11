@@ -7,6 +7,9 @@ const ALLOWED_EVENTS = new Set([
   "funnel_signup_page_view",
   "funnel_signup_submitted",
   "funnel_org_activation",
+  "funnel_billing_page_view",
+  "funnel_checkout_initiated",
+  "funnel_checkout_completed",
 ]);
 
 const MAX_FIELD_LENGTH = 512;
