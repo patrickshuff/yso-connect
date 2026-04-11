@@ -1,14 +1,9 @@
-import { eq, count, sql, gte, asc } from "drizzle-orm";
+import { eq, count, sql, asc } from "drizzle-orm";
 import { Plus, Upload, CalendarX } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/db";
 import { teams, teamPlayers, seasons, events } from "@/db/schema";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
