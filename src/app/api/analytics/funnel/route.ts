@@ -2,6 +2,17 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { funnelEvents } from "@/db/schema";
 
+/**
+ * Funnel Analytics API
+ * 
+ * NOTE ON AUTH: This endpoint is intentionally EXEMPT from Clerk authentication 
+ * in src/proxy.ts. This allows us to track conversion events (landing page CTA clicks, 
+ * signup flow steps) for anonymous users who do not yet have a session.
+ * 
+ * To prevent abuse:
+ * - Event names are restricted to a strictly defined ALLOWED_EVENTS allowlist.
+ * - All input strings are sanitized and length-limited.
+ */
 const ALLOWED_EVENTS = new Set([
   "funnel_landing_cta_click",
   "funnel_signup_page_view",
@@ -27,6 +38,8 @@ function sanitizeValue(value: unknown): string | null {
 }
 
 export async function POST(request: Request) {
+  // Intentionally public endpoint: funnel events are posted from public pages
+  // and pre-auth flows where a Clerk session may not exist yet.
   let payload: Record<string, unknown>;
 
   try {

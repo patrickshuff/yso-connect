@@ -131,7 +131,12 @@ async function handleCoachBillingPayment(
     })
     .where(eq(organizations.id, orgId));
 
-  await logBillingFunnelEvent("checkout_completed", orgId);
+  const [org] = await db
+    .select({ slug: organizations.slug })
+    .from(organizations)
+    .where(eq(organizations.id, orgId));
+
+  await logBillingFunnelEvent("checkout_completed", orgId, org?.slug);
 }
 
 async function handleSubscriptionEvent(event: Stripe.Event): Promise<void> {
@@ -164,14 +169,19 @@ async function handleSubscriptionEvent(event: Stripe.Event): Promise<void> {
     })
     .where(eq(organizations.id, orgId));
 
+  const [org] = await db
+    .select({ slug: organizations.slug })
+    .from(organizations)
+    .where(eq(organizations.id, orgId));
+
   if (event.type === "invoice.payment_failed") {
     await notifyPaymentFailed(orgId);
-    await logBillingFunnelEvent("payment_failed", orgId);
+    await logBillingFunnelEvent("payment_failed", orgId, org?.slug);
     return;
   }
 
   if (event.type === "customer.subscription.deleted") {
-    await logBillingFunnelEvent("subscription_canceled", orgId);
+    await logBillingFunnelEvent("subscription_canceled", orgId, org?.slug);
   }
 }
 
@@ -254,10 +264,12 @@ async function notifyPaymentFailed(orgId: string): Promise<void> {
 async function logBillingFunnelEvent(
   eventName: "payment_failed" | "subscription_canceled" | "checkout_completed",
   organizationId: string,
+  organizationSlug?: string | null,
 ): Promise<void> {
   await db.insert(funnelEvents).values({
     eventName,
     organizationId,
+    organizationSlug,
     location: "stripe_webhook",
     pagePath: "/api/webhooks/stripe",
   });

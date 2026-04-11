@@ -148,9 +148,12 @@ describe("POST /api/webhooks/stripe", () => {
       status: "past_due",
       items: { data: [{ current_period_end: 2000000000 }] },
     });
-    selectWhereMock.mockResolvedValue([
-      { id: "org_1", name: "Acme Soccer", contactEmail: "admin@acme.test" },
-    ]);
+    // First select for org slug, second for notifyPaymentFailed
+    selectWhereMock
+      .mockResolvedValueOnce([{ slug: "acme-soccer" }])
+      .mockResolvedValueOnce([
+        { id: "org_1", name: "Acme Soccer", contactEmail: "admin@acme.test" },
+      ]);
 
     const res = await POST(makeRequest() as never);
 
@@ -171,6 +174,7 @@ describe("POST /api/webhooks/stripe", () => {
       expect.objectContaining({
         eventName: "payment_failed",
         organizationId: "org_1",
+        organizationSlug: "acme-soccer",
       }),
     );
   });
@@ -186,6 +190,7 @@ describe("POST /api/webhooks/stripe", () => {
         },
       },
     });
+    selectWhereMock.mockResolvedValueOnce([{ slug: "acme-soccer-2" }]);
 
     const res = await POST(makeRequest() as never);
 
@@ -200,6 +205,7 @@ describe("POST /api/webhooks/stripe", () => {
       expect.objectContaining({
         eventName: "subscription_canceled",
         organizationId: "org_2",
+        organizationSlug: "acme-soccer-2",
       }),
     );
   });

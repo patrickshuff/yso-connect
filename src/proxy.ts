@@ -11,6 +11,7 @@ const PUBLIC_PREFIXES = [
   "/consent",
   "/api/webhooks/",
   "/api/health",
+  "/api/cron/",
   "/sitemap.xml",
   "/icon.svg",
   "/favicon.ico",
@@ -33,7 +34,7 @@ function hasClerkSession(request: NextRequest): boolean {
 }
 
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
   const authenticated = hasClerkSession(request);
 
   // Send signed-in users away from auth pages immediately
@@ -43,7 +44,10 @@ export function proxy(request: NextRequest) {
 
   // Block unauthenticated access to protected routes
   if (!authenticated && !isPublicPath(pathname)) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    const signInUrl = new URL("/sign-in", request.url);
+    const redirectUrl = `${pathname}${search}`;
+    signInUrl.searchParams.set("redirect_url", redirectUrl);
+    return NextResponse.redirect(signInUrl);
   }
 }
 

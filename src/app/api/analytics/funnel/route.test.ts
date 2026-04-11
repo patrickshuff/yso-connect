@@ -28,6 +28,14 @@ function makeRequest(body: unknown): Request {
 }
 
 describe("POST /api/analytics/funnel", () => {
+  it("accepts valid telemetry without authentication headers", async () => {
+    const res = await POST(makeRequest({ eventName: "funnel_landing_cta_click" }));
+    expect(res.status).toBe(200);
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ eventName: "funnel_landing_cta_click" }),
+    );
+  });
+
   it("accepts a valid funnel_landing_cta_click event", async () => {
     const res = await POST(makeRequest({ eventName: "funnel_landing_cta_click" }));
     expect(res.status).toBe(200);
