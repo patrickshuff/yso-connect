@@ -137,8 +137,7 @@ async function handleSubscriptionEvent(event: Stripe.Event): Promise<void> {
 
   if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
     const invoice = event.data.object as Stripe.Invoice;
-    const subRef =
-      invoice.parent?.subscription_details?.subscription ?? invoice.subscription;
+    const subRef = invoice.parent?.subscription_details?.subscription;
     if (!subRef) {
       return;
     }

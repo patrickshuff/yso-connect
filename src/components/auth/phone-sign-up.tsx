@@ -47,7 +47,14 @@ export function PhoneSignUp() {
   const loading = fetchStatus === "fetching";
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 10);
+    let digits = e.target.value.replace(/\D/g, "");
+    // Strip country code: our format always prefixes "+1", so "1" ends up as
+    // the first extracted digit on every keystroke. US area codes never start
+    // with 1, so it's always safe to drop it.
+    if (digits.startsWith("1")) {
+      digits = digits.slice(1);
+    }
+    const raw = digits.slice(0, 10);
     setDisplayPhone(formatPhone(raw));
     setError(null);
   }
