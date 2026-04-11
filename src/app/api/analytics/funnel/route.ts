@@ -6,7 +6,7 @@ import { funnelEvents } from "@/db/schema";
  * Funnel Analytics API
  * 
  * NOTE ON AUTH: This endpoint is intentionally EXEMPT from Clerk authentication 
- * in src/middleware.ts. This allows us to track conversion events (landing page CTA clicks, 
+ * in src/proxy.ts. This allows us to track conversion events (landing page CTA clicks, 
  * signup flow steps) for anonymous users who do not yet have a session.
  * 
  * To prevent abuse:
