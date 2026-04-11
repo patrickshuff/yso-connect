@@ -1,25 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
-import { middleware } from "./middleware";
+import { proxy } from "./proxy";
 
 function makeRequest(path: string, cookieHeader?: string): NextRequest {
   const headers = cookieHeader ? { cookie: cookieHeader } : {};
   return new NextRequest(`http://localhost${path}`, { headers });
 }
 
-describe("middleware", () => {
+describe("proxy", () => {
   it("does not redirect unauthenticated requests to cron routes", () => {
-    const response = middleware(makeRequest("/api/cron/reminders"));
+    const response = proxy(makeRequest("/api/cron/reminders"));
     expect(response).toBeUndefined();
   });
 
   it("does not redirect unauthenticated requests to analytics routes", () => {
-    const response = middleware(makeRequest("/api/analytics/funnel"));
+    const response = proxy(makeRequest("/api/analytics/funnel"));
     expect(response).toBeUndefined();
   });
 
   it("redirects unauthenticated protected routes to sign-in with redirect_url including query params", () => {
-    const response = middleware(
+    const response = proxy(
       makeRequest(
         "/dashboard/org_1/billing?utm_source=email&utm_medium=trial_reminder&utm_campaign=trial_25d",
       ),
@@ -37,7 +37,7 @@ describe("middleware", () => {
   });
 
   it("redirects authenticated users away from auth pages", () => {
-    const response = middleware(makeRequest("/sign-in", "__session=test-token"));
+    const response = proxy(makeRequest("/sign-in", "__session=test-token"));
     expect(response).toBeDefined();
 
     const location = response?.headers.get("location");

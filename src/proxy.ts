@@ -36,7 +36,7 @@ function hasClerkSession(request: NextRequest): boolean {
   return request.cookies.has("__session");
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const authenticated = hasClerkSession(request);
 
