@@ -14,14 +14,6 @@ interface BillingGateProps {
   orgId: string;
 }
 
-function getTrialDaysRemaining(trialEndsAt: string | null): number {
-  if (!trialEndsAt) return 0;
-  const now = new Date();
-  const end = new Date(trialEndsAt);
-  const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  return Math.max(diff, 0);
-}
-
 function isTrialActive(trialEndsAt: string | null): boolean {
   if (!trialEndsAt) return false;
   return new Date() < new Date(trialEndsAt);
@@ -78,13 +70,7 @@ export function BillingGate({
   }
 
   if (isTrialActive(trialEndsAt)) {
-    const daysRemaining = getTrialDaysRemaining(trialEndsAt);
-    return (
-      <>
-        <TrialBanner daysRemaining={daysRemaining} orgId={orgId} />
-        {children}
-      </>
-    );
+    return <>{children}</>;
   }
 
   return <ExpiredGate orgId={orgId} />;
@@ -102,31 +88,6 @@ function PastDueBanner({ orgId }: { orgId: string }) {
       <a href={`/dashboard/${orgId}/billing`}>
         <Button variant="outline" size="sm" className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900">
           Update billing
-        </Button>
-      </a>
-    </div>
-  );
-}
-
-function TrialBanner({
-  daysRemaining,
-  orgId,
-}: {
-  daysRemaining: number;
-  orgId: string;
-}) {
-  return (
-    <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950">
-      <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-200">
-        <Clock className="size-4" />
-        <span>
-          {daysRemaining} {daysRemaining === 1 ? "day" : "days"} left in your
-          free trial
-        </span>
-      </div>
-      <a href={`/dashboard/${orgId}/billing`}>
-        <Button variant="outline" size="sm" className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900">
-          Upgrade now
         </Button>
       </a>
     </div>
