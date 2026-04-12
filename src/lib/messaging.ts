@@ -5,6 +5,7 @@ import {
   organizations,
   playerGuardians,
   teamPlayers,
+  teams,
   messages,
   messageDeliveries,
   communicationPreferences,
@@ -219,12 +220,23 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
     })
     .returning();
 
-  // Fetch org name for email templates
+  // Fetch org name as fallback label, and team name if targeting a team.
+  // Guardians typically only recognize the team, not the org, so we prefer
+  // the team name in email headers/footers when available.
   const [org] = await db
     .select({ name: organizations.name })
     .from(organizations)
     .where(eq(organizations.id, orgId));
   const orgName = org?.name ?? "Your Organization";
+
+  let senderLabel = orgName;
+  if (targetType === "team" && targetId) {
+    const [team] = await db
+      .select({ name: teams.name })
+      .from(teams)
+      .where(eq(teams.id, targetId));
+    if (team?.name) senderLabel = team.name;
+  }
 
   // Resolve and deduplicate recipients
   const rawRecipients = await resolveRecipients(orgId, targetType, targetId);
@@ -297,7 +309,7 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
         const deliveryId = await createPendingDelivery(message.id, guardian.id, "email");
         const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardian.id);
         const htmlBody = buildBroadcastEmail({
-          orgName,
+          orgName: senderLabel,
           subject,
           body,
           appUrl,
@@ -306,7 +318,7 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
 
         const result = await sendEmail(
           guardian.email,
-          subject ?? "Message from your organization",
+          subject ?? `Message from ${senderLabel}`,
           htmlBody,
           {
             "List-Unsubscribe": `<${unsubscribeUrl}>`,

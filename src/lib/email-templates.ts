@@ -74,9 +74,9 @@ function standardHeader(orgName: string): string {
   </table>`;
 }
 
-function standardFooter(orgName: string, unsubscribeUrl: string): string {
+function standardFooter(label: string, unsubscribeUrl: string): string {
   return `<p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
-    You received this email because you are a member of <strong>${escapeHtml(orgName)}</strong>.
+    You received this email from <strong>${escapeHtml(label)}</strong> on YSO Connect.
     &nbsp;&bull;&nbsp;
     <a href="${unsubscribeUrl}" style="color:#6b7280;text-decoration:underline;">Unsubscribe</a>
   </p>`;
@@ -148,12 +148,12 @@ export interface GuardianConfirmationEmailParams {
 export function buildGuardianConfirmationEmail(
   params: GuardianConfirmationEmailParams,
 ): string {
-  const { firstName, playerName, teamName, orgName, appUrl, guardianId } =
-    params;
+  const { firstName, playerName, teamName, appUrl, guardianId } = params;
   const confirmUrl = buildConfirmationUrl(appUrl, guardianId);
   const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardianId);
 
-  const header = standardHeader(orgName);
+  // Guardians typically only recognize the team name, not the org.
+  const header = standardHeader(teamName);
 
   const body = `
     <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#111827;">Hi ${escapeHtml(firstName)},</h1>
@@ -181,7 +181,7 @@ export function buildGuardianConfirmationEmail(
     </p>
   `;
 
-  const footer = standardFooter(orgName, unsubscribeUrl);
+  const footer = standardFooter(teamName, unsubscribeUrl);
 
   return baseLayout(header, body, footer);
 }
