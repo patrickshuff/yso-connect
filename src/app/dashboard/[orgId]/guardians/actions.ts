@@ -2,9 +2,9 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { guardians, organizations } from "@/db/schema";
+import { guardians, organizations, playerGuardians, players } from "@/db/schema";
 import { requireRole } from "@/lib/memberships";
 import { sendEmail } from "@/lib/email";
 import { buildWelcomeEmail } from "@/lib/email-templates";
@@ -35,9 +35,33 @@ export async function createGuardian(
   const preferredContact =
     (formData.get("preferredContact") as "sms" | "email" | "both" | null) ??
     "sms";
+  const playerId = (formData.get("playerId") as string | null) || null;
+  const relationship =
+    ((formData.get("relationship") as
+      | "mother"
+      | "father"
+      | "guardian"
+      | "grandparent"
+      | "other"
+      | null) ?? "guardian");
 
   if (!firstName || !lastName) {
     return { success: false, error: "First and last name are required" };
+  }
+
+  if (!phone && !email) {
+    return { success: false, error: "Phone or email is required" };
+  }
+
+  // Verify player ownership if linking
+  if (playerId) {
+    const [player] = await db
+      .select({ id: players.id })
+      .from(players)
+      .where(and(eq(players.id, playerId), eq(players.organizationId, orgId)));
+    if (!player) {
+      return { success: false, error: "Player not found" };
+    }
   }
 
   const [guardian] = await db
@@ -52,7 +76,17 @@ export async function createGuardian(
     })
     .returning();
 
+  if (playerId) {
+    await db.insert(playerGuardians).values({
+      playerId,
+      guardianId: guardian.id,
+      relationship,
+      isPrimary: false,
+    });
+  }
+
   revalidatePath(`/dashboard/${orgId}/guardians`);
+  revalidatePath(`/dashboard/${orgId}/players`);
   revalidatePath(`/dashboard/${orgId}`);
 
   // Fire welcome email non-blocking — guardian was already created

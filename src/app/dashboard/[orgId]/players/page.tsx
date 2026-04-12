@@ -15,17 +15,29 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AddPlayerDialog } from "@/components/dashboard/add-player-dialog";
+import { AddGuardianDialog } from "@/components/dashboard/add-guardian-dialog";
 
-interface Guardian {
+interface GuardianRow {
   name: string;
   phone: string | null;
+  relationship: string;
 }
 
 interface PlayerRow {
   id: string;
   firstName: string;
   lastName: string;
-  guardians: Guardian[];
+  guardians: GuardianRow[];
+}
+
+function relationshipLabel(r: string): string {
+  switch (r) {
+    case "mother": return "Mother";
+    case "father": return "Father";
+    case "grandparent": return "Grandparent";
+    case "guardian": return "Guardian";
+    default: return "Other";
+  }
 }
 
 async function getPlayersWithGuardians(orgId: string): Promise<PlayerRow[]> {
@@ -49,15 +61,20 @@ async function getPlayersWithGuardians(orgId: string): Promise<PlayerRow[]> {
       firstName: guardians.firstName,
       lastName: guardians.lastName,
       phone: guardians.phone,
+      relationship: playerGuardians.relationship,
     })
     .from(playerGuardians)
     .innerJoin(guardians, eq(playerGuardians.guardianId, guardians.id))
     .where(inArray(playerGuardians.playerId, playerIds));
 
-  const guardiansByPlayer = new Map<string, Guardian[]>();
+  const guardiansByPlayer = new Map<string, GuardianRow[]>();
   for (const link of guardianLinks) {
     const list = guardiansByPlayer.get(link.playerId) ?? [];
-    list.push({ name: `${link.firstName} ${link.lastName}`, phone: link.phone });
+    list.push({
+      name: `${link.firstName} ${link.lastName}`,
+      phone: link.phone,
+      relationship: link.relationship,
+    });
     guardiansByPlayer.set(link.playerId, list);
   }
 
@@ -107,25 +124,39 @@ export default async function PlayersPage({
               <TableHeader>
                 <TableRow>
                   <TableHead>Player</TableHead>
-                  <TableHead>Guardian 1</TableHead>
-                  <TableHead>Guardian 1 Phone</TableHead>
-                  <TableHead>Guardian 2</TableHead>
-                  <TableHead>Guardian 2 Phone</TableHead>
+                  <TableHead>Guardians</TableHead>
+                  <TableHead className="w-[1%] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {playerRows.map((player) => {
-                  const g1 = player.guardians[0];
-                  const g2 = player.guardians[1];
+                  const playerName = `${player.firstName} ${player.lastName}`;
                   return (
                     <TableRow key={player.id}>
-                      <TableCell className="font-medium">
-                        {player.firstName} {player.lastName}
+                      <TableCell className="font-medium align-top">
+                        {playerName}
                       </TableCell>
-                      <TableCell>{g1?.name ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                      <TableCell>{g1?.phone ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                      <TableCell>{g2?.name ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                      <TableCell>{g2?.phone ?? <span className="text-muted-foreground">—</span>}</TableCell>
+                      <TableCell className="align-top text-muted-foreground">
+                        {player.guardians.length === 0 ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <div className="flex flex-col gap-0.5">
+                            {player.guardians.map((g, i) => (
+                              <span key={i}>
+                                {g.name} — {relationshipLabel(g.relationship)}
+                                {g.phone ? ` · ${g.phone}` : ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right align-top">
+                        <AddGuardianDialog
+                          orgId={orgId}
+                          playerId={player.id}
+                          playerName={playerName}
+                        />
+                      </TableCell>
                     </TableRow>
                   );
                 })}

@@ -17,101 +17,111 @@ import { createGuardian } from "@/app/dashboard/[orgId]/guardians/actions";
 
 interface AddGuardianDialogProps {
   orgId: string;
+  playerId?: string;
+  playerName?: string;
 }
 
-export function AddGuardianDialog({ orgId }: AddGuardianDialogProps) {
+const RELATIONSHIPS = [
+  { value: "mother", label: "Mother" },
+  { value: "father", label: "Father" },
+  { value: "guardian", label: "Guardian" },
+  { value: "grandparent", label: "Grandparent" },
+  { value: "other", label: "Other" },
+] as const;
+
+export function AddGuardianDialog({
+  orgId,
+  playerId,
+  playerName,
+}: AddGuardianDialogProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(formData: FormData) {
-    setPending(true);
     setError(null);
-
+    const phone = (formData.get("phone") as string | null)?.trim();
+    const email = (formData.get("email") as string | null)?.trim();
+    if (!phone && !email) {
+      setError("Phone or email is required");
+      return;
+    }
+    setPending(true);
+    if (playerId) formData.set("playerId", playerId);
     const result = await createGuardian(orgId, formData);
-
     setPending(false);
     if (result.success) {
       setOpen(false);
     } else {
-      setError(result.error ?? "Failed to create guardian");
+      setError(result.error ?? "Failed to add guardian");
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>
-        <Plus className="size-4" data-icon="inline-start" />
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+        <Plus className="size-3.5" data-icon="inline-start" />
         Add Guardian
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Guardian</DialogTitle>
+          <DialogTitle>
+            {playerName ? `Add Guardian for ${playerName}` : "Add Guardian"}
+          </DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="guardian-first-name">First Name</Label>
-            <Input
-              id="guardian-first-name"
-              name="firstName"
-              placeholder="First name"
-              required
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="guardian-first">First Name</Label>
+              <Input id="guardian-first" name="firstName" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="guardian-last">Last Name</Label>
+              <Input id="guardian-last" name="lastName" required />
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="guardian-last-name">Last Name</Label>
-            <Input
-              id="guardian-last-name"
-              name="lastName"
-              placeholder="Last name"
-              required
-            />
+            <Label htmlFor="guardian-relationship">Relationship</Label>
+            <select
+              id="guardian-relationship"
+              name="relationship"
+              defaultValue="guardian"
+              className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {RELATIONSHIPS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="guardian-email">Email (optional)</Label>
-            <Input
-              id="guardian-email"
-              name="email"
-              type="email"
-              placeholder="guardian@example.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="guardian-phone">Phone (optional)</Label>
+            <Label htmlFor="guardian-phone">Phone</Label>
             <Input
               id="guardian-phone"
               name="phone"
               type="tel"
-              placeholder="+1 555-123-4567"
+              placeholder="+1 (555) 000-0000"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="guardian-preferred-contact">
-              Preferred Contact
-            </Label>
-            <select
-              id="guardian-preferred-contact"
-              name="preferredContact"
-              className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              defaultValue="sms"
-            >
-              <option value="sms">SMS</option>
-              <option value="email">Email</option>
-              <option value="both">Both</option>
-            </select>
+            <Label htmlFor="guardian-email">Email</Label>
+            <Input
+              id="guardian-email"
+              name="email"
+              type="email"
+              placeholder="parent@example.com"
+            />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <DialogFooter>
             <Button type="submit" disabled={pending}>
-              {pending ? "Creating..." : "Create Guardian"}
+              {pending ? "Saving…" : "Add Guardian"}
             </Button>
           </DialogFooter>
         </form>

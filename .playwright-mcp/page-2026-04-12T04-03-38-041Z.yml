@@ -1,0 +1,21 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - heading "Welcome to YSO Connect" [level=1] [ref=e12]
+      - paragraph [ref=e13]: How would you like to get started?
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]: I'm a Coach
+          - generic [ref=e18]: Set up your team in under a minute. Add players and guardians right away.
+        - link "Set Up My Team" [ref=e20] [cursor=pointer]:
+          - /url: /dashboard/quick-setup
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]: I'm Setting Up an Organization
+          - generic [ref=e24]: Create a full organization with multiple seasons, sports, and divisions.
+        - link "Create Organization" [ref=e26] [cursor=pointer]:
+          - /url: /dashboard/onboarding
+    - paragraph [ref=e27]: 30-day free trial · No credit card required · Cancel anytime
+  - alert [ref=e28]

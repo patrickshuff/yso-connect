@@ -1,0 +1,45 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: "1"
+      - generic [ref=e7]: "2"
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]: Step 1 of 2
+        - generic [ref=e11]: Your Team
+        - generic [ref=e12]: Tell us about your team. You can add players and guardians after setup.
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: Team Name
+          - textbox "Team Name" [ref=e17]:
+            - /placeholder: e.g. Westside Tigers
+            - text: Playwright Tigers
+        - generic [ref=e18]:
+          - generic [ref=e19]: Sport
+          - combobox [expanded] [ref=e20]:
+            - generic [ref=e21]: Select a sport
+            - img: ▼
+          - listbox [ref=e31]:
+            - option "Baseball" [active] [ref=e32]:
+              - generic [ref=e33]: Baseball
+            - option "Basketball" [ref=e34]:
+              - generic [ref=e35]: Basketball
+            - option "Football" [ref=e36]:
+              - generic [ref=e37]: Football
+            - option "Soccer" [ref=e38]:
+              - generic [ref=e39]: Soccer
+            - option "Softball" [ref=e40]:
+              - generic [ref=e41]: Softball
+            - option "T-Ball" [ref=e42]:
+              - generic [ref=e43]: T-Ball
+            - option "Other" [ref=e44]:
+              - generic [ref=e45]: Other
+          - textbox [ref=e22]
+        - generic [ref=e23]:
+          - generic [ref=e24]: Season Name
+          - textbox "Season Name" [ref=e25]:
+            - /placeholder: e.g. Spring 2026
+            - text: Spring 2026
+        - generic [ref=e26]:
+          - button "Create My Team" [disabled]
+  - alert [ref=e27]

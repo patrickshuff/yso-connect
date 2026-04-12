@@ -1,15 +1,18 @@
 import { eq, count, sql } from "drizzle-orm";
 import { Shield } from "lucide-react";
+import Link from "next/link";
 import { db } from "@/db";
 import { teams, teamPlayers, seasons } from "@/db/schema";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AddTeamDialog } from "@/components/dashboard/add-team-dialog";
 
 async function getTeamsWithPlayerCount(orgId: string) {
@@ -73,25 +76,44 @@ export default async function TeamsPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {teamRows.map((team) => (
-            <Card key={team.id}>
-              <CardHeader>
-                <CardTitle>{team.name}</CardTitle>
-                <CardDescription className="flex flex-wrap gap-1">
-                  <Badge variant="secondary">{team.seasonName}</Badge>
-                  {team.sport && <Badge variant="outline">{team.sport}</Badge>}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {team.playerCount}{" "}
-                  {team.playerCount === 1 ? "player" : "players"}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Team</TableHead>
+                  <TableHead>Season</TableHead>
+                  <TableHead>Sport</TableHead>
+                  <TableHead>Players</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {teamRows.map((team) => (
+                  <TableRow key={team.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/dashboard/${orgId}/teams/${team.id}`}
+                        className="hover:underline underline-offset-2"
+                      >
+                        {team.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{team.seasonName}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {team.sport ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {team.playerCount}{" "}
+                      {team.playerCount === 1 ? "player" : "players"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
