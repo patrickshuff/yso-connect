@@ -56,7 +56,10 @@ export function PhoneSignIn() {
   const loading = fetchStatus === "fetching";
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 10);
+    // Strip the "+1 " prefix before extracting digits so it doesn't count
+    // as an extra digit and corrupt the formatted output on each keystroke.
+    const withoutPrefix = e.target.value.replace(/^\+?1[\s\-.]?/, "");
+    const raw = withoutPrefix.replace(/\D/g, "").slice(0, 10);
     setDisplayPhone(formatPhone(raw));
     setError(null);
   }
