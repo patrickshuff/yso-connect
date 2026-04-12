@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useSignIn } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -35,15 +35,35 @@ function toE164(formatted: string): string {
 
 export function PhoneSignIn() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isSignedIn } = useAuth();
   const { signIn, fetchStatus } = useSignIn();
 
-  const [method, setMethod] = useState<Method>("phone");
+  // Support prefill from ?phone= and ?email= so the sign-up flow can
+  // redirect to sign-in when the identifier is already taken.
+  const prefillPhoneE164 = searchParams.get("phone") ?? "";
+  const prefillEmail = searchParams.get("email") ?? "";
+
+  function formatPhoneFromE164(e164: string): string {
+    const digits = e164.replace(/\D/g, "");
+    const ten = digits.startsWith("1") ? digits.slice(1) : digits;
+    return formatPhone(ten.slice(0, 10));
+  }
+
+  const [method, setMethod] = useState<Method>(
+    prefillEmail ? "email" : "phone",
+  );
   const [step, setStep] = useState<Step>("identifier");
-  const [displayPhone, setDisplayPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [displayPhone, setDisplayPhone] = useState(() =>
+    prefillPhoneE164 ? formatPhoneFromE164(prefillPhoneE164) : "",
+  );
+  const [email, setEmail] = useState(prefillEmail);
   const [otp, setOtp] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    prefillPhoneE164 || prefillEmail
+      ? "You already have an account — enter the code we send to sign in."
+      : null,
+  );
 
   useEffect(() => {
     if (isSignedIn) {

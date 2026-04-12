@@ -71,19 +71,40 @@ export function PhoneSignUp() {
     setError(null);
   }
 
+  function isIdentifierTaken(err: { code?: string; message?: string }): boolean {
+    if (err.code === "form_identifier_exists") return true;
+    const msg = err.message?.toLowerCase() ?? "";
+    return msg.includes("already") || msg.includes("taken");
+  }
+
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
     if (!signUp) return;
     setError(null);
 
     if (method === "phone") {
-      const { error: createErr } = await signUp.create({ phoneNumber: toE164(displayPhone) });
-      if (createErr) { setError(createErr.message); return; }
+      const phoneE164 = toE164(displayPhone);
+      const { error: createErr } = await signUp.create({ phoneNumber: phoneE164 });
+      if (createErr) {
+        if (isIdentifierTaken(createErr)) {
+          router.push(`/sign-in?phone=${encodeURIComponent(phoneE164)}`);
+          return;
+        }
+        setError(createErr.message);
+        return;
+      }
       const { error: sendErr } = await signUp.verifications.sendPhoneCode();
       if (sendErr) { setError(sendErr.message); return; }
     } else {
       const { error: createErr } = await signUp.create({ emailAddress: email });
-      if (createErr) { setError(createErr.message); return; }
+      if (createErr) {
+        if (isIdentifierTaken(createErr)) {
+          router.push(`/sign-in?email=${encodeURIComponent(email)}`);
+          return;
+        }
+        setError(createErr.message);
+        return;
+      }
       const { error: sendErr } = await signUp.verifications.sendEmailCode();
       if (sendErr) { setError(sendErr.message); return; }
     }
