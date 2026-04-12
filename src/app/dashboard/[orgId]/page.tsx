@@ -1,10 +1,11 @@
-import { eq, count, sql } from "drizzle-orm";
-import { Plus } from "lucide-react";
+import { eq, count, sql, and, asc } from "drizzle-orm";
+import { CalendarX } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/db";
-import { teams, teamPlayers, seasons } from "@/db/schema";
+import { teams, teamPlayers, seasons, events } from "@/db/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -32,13 +33,51 @@ async function getTeamsWithPlayerCount(orgId: string) {
     .orderBy(sql`${teams.name} asc`);
 }
 
+async function getUpcomingEvents(orgId: string) {
+  return db
+    .select({
+      id: events.id,
+      title: events.title,
+      eventType: events.eventType,
+      startTime: events.startTime,
+      location: events.location,
+      teamId: events.teamId,
+      teamName: teams.name,
+    })
+    .from(events)
+    .leftJoin(teams, eq(events.teamId, teams.id))
+    .where(
+      and(
+        eq(events.organizationId, orgId),
+        eq(events.isCancelled, false),
+        sql`${events.startTime} >= now()`,
+      ),
+    )
+    .orderBy(asc(events.startTime))
+    .limit(10);
+}
+
+function formatEventDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/New_York",
+  });
+}
+
 export default async function OrgOverviewPage({
   params,
 }: {
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const teamRows = await getTeamsWithPlayerCount(orgId);
+  const [teamRows, upcomingEvents] = await Promise.all([
+    getTeamsWithPlayerCount(orgId),
+    getUpcomingEvents(orgId),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -122,6 +161,70 @@ export default async function OrgOverviewPage({
         )}
       </div>
 
+      {/* Upcoming Events */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Upcoming Events
+          </h3>
+        </div>
+        {upcomingEvents.length === 0 ? (
+          <Card>
+            <CardContent>
+              <div className="flex flex-col items-center gap-2 py-8">
+                <CalendarX className="size-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  No upcoming events scheduled.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Event</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Team</TableHead>
+                    <TableHead>When</TableHead>
+                    <TableHead>Location</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {upcomingEvents.map((event) => (
+                    <TableRow key={event.id}>
+                      <TableCell className="font-medium">{event.title}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{event.eventType}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {event.teamId && event.teamName ? (
+                          <Link
+                            href={`/dashboard/${orgId}/teams/${event.teamId}`}
+                            className="hover:underline underline-offset-2"
+                          >
+                            {event.teamName}
+                          </Link>
+                        ) : (
+                          <span className="text-zinc-400">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {formatEventDate(event.startTime)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {event.location ?? <span className="text-zinc-400">—</span>}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
