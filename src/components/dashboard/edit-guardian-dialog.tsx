@@ -89,16 +89,13 @@ export function EditGuardianDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        render={
-          <Badge
-            variant="secondary"
-            className="cursor-pointer font-normal hover:bg-secondary/80"
-          />
-        }
+        render={<button type="button" className="cursor-pointer outline-none" />}
       >
-        {displayName}
-        {displayRel ? ` — ${displayRel}` : ""}
-        {phone ? ` · ${phone}` : ""}
+        <Badge variant="secondary" className="font-normal hover:bg-secondary/80">
+          {displayName}
+          {displayRel ? ` — ${displayRel}` : ""}
+          {phone ? ` · ${phone}` : ""}
+        </Badge>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
