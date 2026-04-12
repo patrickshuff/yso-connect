@@ -85,9 +85,7 @@ export async function createGuardian(
     });
   }
 
-  revalidatePath(`/dashboard/${orgId}/guardians`);
-  revalidatePath(`/dashboard/${orgId}/players`);
-  revalidatePath(`/dashboard/${orgId}`);
+  revalidatePath(`/dashboard/${orgId}`, "layout");
 
   // Fire welcome email non-blocking — guardian was already created
   if (guardian.email) {

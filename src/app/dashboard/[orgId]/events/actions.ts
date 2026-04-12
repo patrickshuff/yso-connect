@@ -65,7 +65,10 @@ export async function createEvent(
 
   await createDefaultReminders(event.id, start, orgId);
 
-  revalidatePath(`/dashboard/${orgId}/events`);
+  if (teamId) {
+    revalidatePath(`/dashboard/${orgId}/teams/${teamId}/events`);
+    revalidatePath(`/dashboard/${orgId}/teams/${teamId}`);
+  }
   revalidatePath(`/dashboard/${orgId}`);
 
   return { success: true, eventId: event.id };
@@ -92,7 +95,10 @@ export async function cancelEvent(
     return { success: false, error: "Event not found" };
   }
 
-  revalidatePath(`/dashboard/${orgId}/events`);
+  if (event.teamId) {
+    revalidatePath(`/dashboard/${orgId}/teams/${event.teamId}/events`);
+    revalidatePath(`/dashboard/${orgId}/teams/${event.teamId}`);
+  }
   revalidatePath(`/dashboard/${orgId}`);
 
   return { success: true, eventId: event.id };

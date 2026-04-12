@@ -17,9 +17,10 @@ import { createPlayer } from "@/app/dashboard/[orgId]/players/actions";
 
 interface AddPlayerDialogProps {
   orgId: string;
+  teamId?: string;
 }
 
-export function AddPlayerDialog({ orgId }: AddPlayerDialogProps) {
+export function AddPlayerDialog({ orgId, teamId }: AddPlayerDialogProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -49,6 +50,7 @@ export function AddPlayerDialog({ orgId }: AddPlayerDialogProps) {
           <DialogTitle>Add Player</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
+          {teamId && <input type="hidden" name="teamId" value={teamId} />}
           <div className="space-y-2">
             <Label htmlFor="player-first-name">First Name</Label>
             <Input

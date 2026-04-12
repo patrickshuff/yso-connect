@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { players } from "@/db/schema";
+import { players, teamPlayers } from "@/db/schema";
 import { requireRole } from "@/lib/memberships";
 
 interface CreatePlayerResult {
@@ -25,6 +25,7 @@ export async function createPlayer(
 
   const firstName = formData.get("firstName") as string | null;
   const lastName = formData.get("lastName") as string | null;
+  const teamId = formData.get("teamId") as string | null;
 
   if (!firstName || !lastName) {
     return { success: false, error: "First and last name are required" };
@@ -39,7 +40,15 @@ export async function createPlayer(
     })
     .returning();
 
-  revalidatePath(`/dashboard/${orgId}/players`);
+  if (teamId) {
+    await db.insert(teamPlayers).values({
+      teamId,
+      playerId: player.id,
+    });
+    revalidatePath(`/dashboard/${orgId}/teams/${teamId}/players`);
+    revalidatePath(`/dashboard/${orgId}/teams/${teamId}`);
+  }
+
   revalidatePath(`/dashboard/${orgId}`);
 
   return { success: true, playerId: player.id };

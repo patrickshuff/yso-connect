@@ -1,11 +1,15 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
+import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
 import { db } from "@/db";
-import { players, playerGuardians, guardians } from "@/db/schema";
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+  teams,
+  teamPlayers,
+  players,
+  playerGuardians,
+  guardians,
+} from "@/db/schema";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -32,29 +36,47 @@ interface PlayerRow {
 
 function relationshipLabel(r: string): string {
   switch (r) {
-    case "mother": return "Mother";
-    case "father": return "Father";
-    case "grandparent": return "Grandparent";
-    case "guardian": return "Guardian";
-    default: return "Other";
+    case "mother":
+      return "Mother";
+    case "father":
+      return "Father";
+    case "grandparent":
+      return "Grandparent";
+    case "guardian":
+      return "Guardian";
+    default:
+      return "Other";
   }
 }
 
-async function getPlayersWithGuardians(orgId: string): Promise<PlayerRow[]> {
-  const allPlayers = await db
+async function getTeam(orgId: string, teamId: string) {
+  const [row] = await db
+    .select({ id: teams.id, name: teams.name })
+    .from(teams)
+    .where(and(eq(teams.id, teamId), eq(teams.organizationId, orgId)));
+  return row ?? null;
+}
+
+async function getTeamPlayers(
+  teamId: string,
+  orgId: string,
+): Promise<PlayerRow[]> {
+  const rows = await db
     .select({
       id: players.id,
       firstName: players.firstName,
       lastName: players.lastName,
     })
-    .from(players)
-    .where(eq(players.organizationId, orgId))
+    .from(teamPlayers)
+    .innerJoin(players, eq(teamPlayers.playerId, players.id))
+    .where(
+      and(eq(teamPlayers.teamId, teamId), eq(players.organizationId, orgId)),
+    )
     .orderBy(sql`${players.lastName} asc, ${players.firstName} asc`);
 
-  if (allPlayers.length === 0) return [];
+  if (rows.length === 0) return [];
 
-  const playerIds = allPlayers.map((p) => p.id);
-
+  const playerIds = rows.map((p) => p.id);
   const guardianLinks = await db
     .select({
       playerId: playerGuardians.playerId,
@@ -67,43 +89,43 @@ async function getPlayersWithGuardians(orgId: string): Promise<PlayerRow[]> {
     .innerJoin(guardians, eq(playerGuardians.guardianId, guardians.id))
     .where(inArray(playerGuardians.playerId, playerIds));
 
-  const guardiansByPlayer = new Map<string, GuardianRow[]>();
+  const byPlayer = new Map<string, GuardianRow[]>();
   for (const link of guardianLinks) {
-    const list = guardiansByPlayer.get(link.playerId) ?? [];
+    const list = byPlayer.get(link.playerId) ?? [];
     list.push({
       name: `${link.firstName} ${link.lastName}`,
       phone: link.phone,
       relationship: link.relationship,
     });
-    guardiansByPlayer.set(link.playerId, list);
+    byPlayer.set(link.playerId, list);
   }
 
-  return allPlayers.map((p) => ({
-    ...p,
-    guardians: guardiansByPlayer.get(p.id) ?? [],
-  }));
+  return rows.map((p) => ({ ...p, guardians: byPlayer.get(p.id) ?? [] }));
 }
 
-export default async function PlayersPage({
+export default async function TeamPlayersPage({
   params,
 }: {
-  params: Promise<{ orgId: string }>;
+  params: Promise<{ orgId: string; teamId: string }>;
 }) {
-  const { orgId } = await params;
-  const playerRows = await getPlayersWithGuardians(orgId);
+  const { orgId, teamId } = await params;
+  const team = await getTeam(orgId, teamId);
+  if (!team) notFound();
+
+  const playerRows = await getTeamPlayers(teamId, orgId);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Players
-          </h2>
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            {team.name} — Players
+          </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage players in your organization.
+            Players on this team and their guardians.
           </p>
         </div>
-        <AddPlayerDialog orgId={orgId} />
+        <AddPlayerDialog orgId={orgId} teamId={teamId} />
       </div>
 
       {playerRows.length === 0 ? (
@@ -112,7 +134,7 @@ export default async function PlayersPage({
             <div className="flex flex-col items-center gap-2 py-12">
               <Users className="size-10 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                No players yet. Add your first player to get started.
+                No players on this team yet.
               </p>
             </div>
           </CardContent>

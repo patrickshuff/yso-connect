@@ -24,6 +24,8 @@ interface Team {
 interface AddEventDialogProps {
   orgId: string;
   teams: Team[];
+  lockedTeamId?: string;
+  lockedTeamName?: string;
 }
 
 const EVENT_TYPES = [
@@ -33,7 +35,12 @@ const EVENT_TYPES = [
   { value: "meeting", label: "Meeting" },
 ] as const;
 
-export function AddEventDialog({ orgId, teams }: AddEventDialogProps) {
+export function AddEventDialog({
+  orgId,
+  teams,
+  lockedTeamId,
+  lockedTeamName,
+}: AddEventDialogProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -90,21 +97,29 @@ export function AddEventDialog({ orgId, teams }: AddEventDialogProps) {
             </select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="event-team">Team (optional)</Label>
-            <select
-              id="event-team"
-              name="teamId"
-              className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="">All teams</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {lockedTeamId ? (
+            <div className="space-y-1">
+              <Label>Team</Label>
+              <p className="text-sm text-muted-foreground">{lockedTeamName}</p>
+              <input type="hidden" name="teamId" value={lockedTeamId} />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="event-team">Team (optional)</Label>
+              <select
+                id="event-team"
+                name="teamId"
+                className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">All teams</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="event-location">Location (optional)</Label>

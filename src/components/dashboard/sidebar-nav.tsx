@@ -4,11 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Users,
-  UserCheck,
   Shield,
   Calendar,
-  CalendarDays,
   CreditCard,
   FileText,
   Inbox,
@@ -25,9 +22,6 @@ interface SidebarNavProps {
 const navItems = [
   { label: "Overview", href: "", icon: LayoutDashboard },
   { label: "Teams", href: "/teams", icon: Shield },
-  { label: "Players", href: "/players", icon: Users },
-  { label: "Guardians", href: "/guardians", icon: UserCheck },
-  { label: "Events", href: "/events", icon: CalendarDays },
   { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Submissions", href: "/submissions", icon: Inbox },
   { label: "Payments", href: "/payments", icon: CreditCard },

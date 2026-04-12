@@ -1,8 +1,8 @@
-import { eq, count, sql, asc } from "drizzle-orm";
-import { Plus, Upload, CalendarX } from "lucide-react";
+import { eq, count, sql } from "drizzle-orm";
+import { Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/db";
-import { teams, teamPlayers, seasons, events } from "@/db/schema";
+import { teams, teamPlayers, seasons } from "@/db/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,58 +32,13 @@ async function getTeamsWithPlayerCount(orgId: string) {
     .orderBy(sql`${teams.name} asc`);
 }
 
-async function getUpcomingEvents(orgId: string) {
-  return db
-    .select({
-      id: events.id,
-      title: events.title,
-      eventType: events.eventType,
-      startTime: events.startTime,
-      location: events.location,
-      teamName: teams.name,
-    })
-    .from(events)
-    .leftJoin(teams, eq(events.teamId, teams.id))
-    .where(
-      sql`${events.organizationId} = ${orgId}
-        AND ${events.isCancelled} = false
-        AND ${events.startTime} >= now()`
-    )
-    .orderBy(asc(events.startTime))
-    .limit(8);
-}
-
-function formatEventDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "America/New_York",
-  });
-}
-
-function eventTypeLabel(type: string): string {
-  switch (type) {
-    case "game": return "Game";
-    case "practice": return "Practice";
-    case "tournament": return "Tournament";
-    case "meeting": return "Meeting";
-    default: return type;
-  }
-}
-
 export default async function OrgOverviewPage({
   params,
 }: {
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const [teamRows, upcomingEvents] = await Promise.all([
-    getTeamsWithPlayerCount(orgId),
-    getUpcomingEvents(orgId),
-  ]);
+  const teamRows = await getTeamsWithPlayerCount(orgId);
 
   return (
     <div className="space-y-8">
@@ -114,7 +69,10 @@ export default async function OrgOverviewPage({
             <CardContent>
               <p className="py-8 text-center text-sm text-muted-foreground">
                 No teams yet.{" "}
-                <Link href={`/dashboard/${orgId}/teams`} className="underline underline-offset-2">
+                <Link
+                  href={`/dashboard/${orgId}/teams`}
+                  className="underline underline-offset-2"
+                >
                   Create your first team.
                 </Link>
               </p>
@@ -147,70 +105,13 @@ export default async function OrgOverviewPage({
                         <Badge variant="secondary">{team.seasonName}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {team.sport ?? <span className="text-muted-foreground">—</span>}
+                        {team.sport ?? (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {team.playerCount} {team.playerCount === 1 ? "player" : "players"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Upcoming Events */}
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Upcoming Events
-          </h3>
-          <Link href={`/dashboard/${orgId}/events`}>
-            <Button variant="outline" size="sm">
-              <Plus className="size-4" data-icon="inline-start" />
-              Add Event
-            </Button>
-          </Link>
-        </div>
-        {upcomingEvents.length === 0 ? (
-          <Card>
-            <CardContent>
-              <div className="flex flex-col items-center gap-2 py-8">
-                <CalendarX className="size-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">No upcoming events scheduled.</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Team</TableHead>
-                    <TableHead>When</TableHead>
-                    <TableHead>Location</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {upcomingEvents.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell className="font-medium">{event.title}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{eventTypeLabel(event.eventType)}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {event.teamName ?? <span className="text-zinc-400">—</span>}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap">
-                        {formatEventDate(event.startTime)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {event.location ?? <span className="text-zinc-400">—</span>}
+                        {team.playerCount}{" "}
+                        {team.playerCount === 1 ? "player" : "players"}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -227,12 +128,6 @@ export default async function OrgOverviewPage({
           Quick Actions
         </h3>
         <div className="flex flex-wrap gap-3">
-          <Link href={`/dashboard/${orgId}/players`}>
-            <Button variant="outline">
-              <Plus className="size-4" data-icon="inline-start" />
-              Add Player
-            </Button>
-          </Link>
           <Link href={`/dashboard/${orgId}/import`}>
             <Button variant="outline">
               <Upload className="size-4" data-icon="inline-start" />
