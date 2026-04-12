@@ -44,6 +44,11 @@ async function signIn(page: Page): Promise<void> {
 }
 
 test.describe("Onboarding flow", () => {
+  test.skip(
+    !process.env.E2E_PHONE_NUMBER,
+    "E2E_PHONE_NUMBER not set — skipping onboarding E2E (requires Clerk test user)",
+  );
+
   test("complete onboarding: create org, season, and sports", async ({ page }) => {
     await signIn(page);
 

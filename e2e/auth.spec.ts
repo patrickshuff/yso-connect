@@ -81,6 +81,11 @@ async function signInViaClerk(page: Page, phoneE164: string): Promise<void> {
 }
 
 test.describe("Auth flows", () => {
+  test.skip(
+    !process.env.E2E_PHONE_NUMBER,
+    "E2E_PHONE_NUMBER not set — skipping auth E2E (requires Twilio test number)",
+  );
+
   test("phone sign-in flow: enter number, receive OTP, verify, redirect to dashboard", async ({
     page,
   }) => {
