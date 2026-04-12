@@ -6,7 +6,7 @@ import { createHmac, timingSafeEqual } from "crypto";
  */
 
 function getSecret(): string {
-  const secret = process.env.UNSUBSCRIBE_SECRET;
+  const secret = process.env.UNSUBSCRIBE_SECRET?.trim();
   if (!secret) {
     throw new Error("UNSUBSCRIBE_SECRET environment variable is required");
   }

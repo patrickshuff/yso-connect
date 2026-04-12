@@ -7,8 +7,9 @@ import { createHmac, timingSafeEqual } from "crypto";
  */
 
 function getSecret(): string {
-  const secret =
-    process.env.CONFIRMATION_SECRET || process.env.UNSUBSCRIBE_SECRET;
+  const secret = (
+    process.env.CONFIRMATION_SECRET || process.env.UNSUBSCRIBE_SECRET
+  )?.trim();
   if (!secret) {
     throw new Error(
       "CONFIRMATION_SECRET or UNSUBSCRIBE_SECRET environment variable is required",
