@@ -1,5 +1,27 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
+import type { NextFetchEvent } from "next/server";
+
+// Mock clerkMiddleware so tests don't need a live Clerk backend.
+// The mock delegates to the handler with userId: null (unauthenticated),
+// sufficient to test route-protection redirect logic.
+// Auth-page redirects use the cookie fast-path and never reach clerkMiddleware.
+vi.mock("@clerk/nextjs/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@clerk/nextjs/server")>();
+  return {
+    ...actual,
+    clerkMiddleware: (
+      handler: (
+        auth: () => Promise<{ userId: null }>,
+        request: NextRequest,
+      ) => Promise<NextResponse | undefined>,
+    ) =>
+      async (request: NextRequest, _event: NextFetchEvent) =>
+        handler(async () => ({ userId: null }), request),
+  };
+});
+
+// proxy must be imported AFTER the mock is registered
 import { proxy } from "./proxy";
 
 function makeRequest(path: string, cookieHeader?: string): NextRequest {
