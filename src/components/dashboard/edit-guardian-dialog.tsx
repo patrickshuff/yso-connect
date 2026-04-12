@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -27,6 +28,7 @@ interface EditGuardianDialogProps {
   phone: string | null;
   email: string | null;
   relationship: string;
+  triggerStyle?: "badge" | "edit-button";
 }
 
 const RELATIONSHIPS = [
@@ -46,6 +48,7 @@ export function EditGuardianDialog({
   phone,
   email,
   relationship,
+  triggerStyle = "badge",
 }: EditGuardianDialogProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,15 +91,22 @@ export function EditGuardianDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={<button type="button" className="cursor-pointer outline-none" />}
-      >
-        <Badge variant="secondary" className="font-normal hover:bg-secondary/80">
-          {displayName}
-          {displayRel ? ` — ${displayRel}` : ""}
-          {phone ? ` · ${phone}` : ""}
-        </Badge>
-      </DialogTrigger>
+      {triggerStyle === "edit-button" ? (
+        <DialogTrigger render={<Button variant="outline" size="sm" />}>
+          <Pencil className="size-3.5" data-icon="inline-start" />
+          Edit
+        </DialogTrigger>
+      ) : (
+        <DialogTrigger
+          render={<button type="button" className="cursor-pointer outline-none" />}
+        >
+          <Badge variant="secondary" className="font-normal hover:bg-secondary/80">
+            {displayName}
+            {displayRel ? ` — ${displayRel}` : ""}
+            {phone ? ` · ${phone}` : ""}
+          </Badge>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Guardian</DialogTitle>
