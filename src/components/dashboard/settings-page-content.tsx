@@ -3,23 +3,42 @@
 import { useState, useTransition } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateReminderSettings } from "@/app/dashboard/[orgId]/settings/actions";
+import {
+  updateReminderSettings,
+  renameOrganization,
+} from "@/app/dashboard/[orgId]/settings/actions";
 
 interface SettingsPageContentProps {
   orgId: string;
+  orgName: string;
   reminders24hEnabled: boolean;
   reminders2hEnabled: boolean;
 }
 
 export function SettingsPageContent({
   orgId,
+  orgName: initialOrgName,
   reminders24hEnabled: initialReminders24h,
   reminders2hEnabled: initialReminders2h,
 }: SettingsPageContentProps) {
+  const [orgName, setOrgName] = useState(initialOrgName);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [nameSaving, setNameSaving] = useState(false);
   const [reminders24h, setReminders24h] = useState(initialReminders24h);
   const [reminders2h, setReminders2h] = useState(initialReminders2h);
   const [isPending, startTransition] = useTransition();
+
+  async function handleRename(e: React.FormEvent) {
+    e.preventDefault();
+    setNameError(null);
+    setNameSaving(true);
+    const result = await renameOrganization(orgId, orgName);
+    setNameSaving(false);
+    if (!result.success) setNameError(result.error ?? "Failed to save");
+  }
 
   function handleToggle(
     field: "24h" | "2h",
@@ -47,6 +66,33 @@ export function SettingsPageContent({
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">Manage your organization preferences.</p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Organization</CardTitle>
+          <CardDescription>Rename this workspace.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleRename} className="flex items-end gap-2">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="org-name">Name</Label>
+              <Input
+                id="org-name"
+                value={orgName}
+                onChange={(e) => {
+                  setOrgName(e.target.value);
+                  setNameError(null);
+                }}
+                required
+              />
+              {nameError && <p className="text-sm text-destructive">{nameError}</p>}
+            </div>
+            <Button type="submit" disabled={nameSaving || orgName === initialOrgName}>
+              {nameSaving ? "Saving…" : "Save"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

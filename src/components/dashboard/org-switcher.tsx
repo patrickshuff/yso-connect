@@ -26,7 +26,14 @@ export function OrgSwitcher({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm font-semibold outline-none hover:bg-zinc-100 focus-visible:bg-zinc-100 dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800">
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm font-semibold outline-none hover:bg-zinc-100 focus-visible:bg-zinc-100 dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800"
+          />
+        }
+      >
         <div className="flex min-w-0 items-center gap-2">
           <div className="flex size-6 shrink-0 items-center justify-center rounded bg-primary text-primary-foreground">
             <Building2 className="size-3.5" />

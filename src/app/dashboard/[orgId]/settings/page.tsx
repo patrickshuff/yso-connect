@@ -13,6 +13,7 @@ export default async function SettingsPage({
 
   const [org] = await db
     .select({
+      name: organizations.name,
       reminders24hEnabled: organizations.reminders24hEnabled,
       reminders2hEnabled: organizations.reminders2hEnabled,
     })
@@ -26,6 +27,7 @@ export default async function SettingsPage({
   return (
     <SettingsPageContent
       orgId={orgId}
+      orgName={org.name}
       reminders24hEnabled={org.reminders24hEnabled}
       reminders2hEnabled={org.reminders2hEnabled}
     />

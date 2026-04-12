@@ -44,3 +44,27 @@ export async function updateReminderSettings(
 
   return { success: true };
 }
+
+export async function renameOrganization(
+  orgId: string,
+  name: string,
+): Promise<{ success: boolean; error?: string }> {
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
+  if (!userId) return { success: false, error: "Unauthorized" };
+
+  await requireRole(orgId, userId, "admin");
+
+  const trimmed = name.trim();
+  if (!trimmed) return { success: false, error: "Name is required" };
+  if (trimmed.length > 255) return { success: false, error: "Name too long" };
+
+  await db
+    .update(organizations)
+    .set({ name: trimmed, updatedAt: new Date() })
+    .where(eq(organizations.id, orgId));
+
+  logger.info("Renamed organization", { orgId, name: trimmed });
+
+  revalidatePath(`/dashboard/${orgId}`, "layout");
+  return { success: true };
+}

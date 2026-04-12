@@ -46,7 +46,9 @@ export async function quickSetupTeam(
     return { success: false, error: "Season name is required" };
   }
 
-  const orgName = displayName ? displayName : teamName.trim();
+  // Default to "Personal" when we have no user name — it's a personal
+  // workspace, not "the first team's name"
+  const orgName = displayName || "Personal";
   const slug = slugify(orgName) + "-" + Date.now().toString(36);
 
   const trialEndsAt = new Date();
