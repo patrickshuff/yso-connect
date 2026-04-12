@@ -23,7 +23,9 @@ export async function quickSetupTeam(
   sportName: string,
   seasonName: string,
 ): Promise<QuickSetupResult> {
-  const { userId } = await auth();
+  // treatPendingAsSignedOut: false — new users without a Clerk org have
+  // "pending" sessions. We manage our own orgs in DB, so we still need the userId.
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }

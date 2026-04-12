@@ -61,16 +61,6 @@ export function AddTeamDialog({
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="team-name">Team Name</Label>
-            <Input
-              id="team-name"
-              name="name"
-              placeholder="e.g. Blue Jays U12"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="team-sport">Sport</Label>
             <select
               id="team-sport"
@@ -82,6 +72,16 @@ export function AddTeamDialog({
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="team-name">Team Name</Label>
+            <Input
+              id="team-name"
+              name="name"
+              placeholder="e.g. Blue Jays U12"
+              required
+            />
           </div>
 
           <div className="space-y-2">
