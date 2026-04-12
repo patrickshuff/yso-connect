@@ -45,6 +45,8 @@ next-env.d.ts
 # playwright
 playwright-report/
 test-results/
+.playwright-mcp/
+*.png
 
 # python virtual environments
 .venv/
