@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,18 +12,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SidebarNav } from "./sidebar-nav";
+import { OrgSwitcher } from "./org-switcher";
 
 interface DashboardShellProps {
   orgId: string;
   orgName: string;
-  isOwner: boolean;
+  userOrgs: Array<{ id: string; name: string }>;
   children: React.ReactNode;
 }
 
 export function DashboardShell({
   orgId,
   orgName,
-  isOwner,
+  userOrgs,
   children,
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -33,10 +33,8 @@ export function DashboardShell({
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 lg:block">
-        <div className="flex h-14 items-center border-b border-zinc-200 px-4 dark:border-zinc-800">
-          <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            {orgName}
-          </span>
+        <div className="flex h-14 items-center border-b border-zinc-200 px-2 dark:border-zinc-800">
+          <OrgSwitcher currentOrgId={orgId} currentOrgName={orgName} orgs={userOrgs} />
         </div>
         <SidebarNav orgId={orgId} />
       </aside>
@@ -74,14 +72,6 @@ export function DashboardShell({
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            {isOwner && (
-              <Link
-                href="/admin"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              >
-                Admin
-              </Link>
-            )}
             <UserButton />
           </div>
         </header>

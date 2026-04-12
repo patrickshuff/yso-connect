@@ -144,3 +144,89 @@ export async function createGuardian(
 
   return { success: true, guardianId: guardian.id };
 }
+
+interface UpdateGuardianResult {
+  success: boolean;
+  error?: string;
+}
+
+export async function updateGuardian(
+  orgId: string,
+  guardianId: string,
+  formData: FormData,
+): Promise<UpdateGuardianResult> {
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
+  if (!userId) return { success: false, error: "Unauthorized" };
+
+  await requireRole(orgId, userId, "admin");
+
+  const [existing] = await db
+    .select({ id: guardians.id })
+    .from(guardians)
+    .where(and(eq(guardians.id, guardianId), eq(guardians.organizationId, orgId)));
+  if (!existing) return { success: false, error: "Guardian not found" };
+
+  const firstName = formData.get("firstName") as string | null;
+  const lastName = formData.get("lastName") as string | null;
+  const email = (formData.get("email") as string | null) || null;
+  const phone = (formData.get("phone") as string | null) || null;
+  const playerGuardianId =
+    (formData.get("playerGuardianId") as string | null) || null;
+  const relationship = formData.get("relationship") as
+    | "mother"
+    | "father"
+    | "guardian"
+    | "grandparent"
+    | "other"
+    | null;
+
+  if (!firstName || !lastName) {
+    return { success: false, error: "First and last name are required" };
+  }
+  if (!phone && !email) {
+    return { success: false, error: "Phone or email is required" };
+  }
+
+  await db
+    .update(guardians)
+    .set({ firstName, lastName, email, phone })
+    .where(eq(guardians.id, guardianId));
+
+  if (playerGuardianId && relationship) {
+    await db
+      .update(playerGuardians)
+      .set({ relationship })
+      .where(eq(playerGuardians.id, playerGuardianId));
+  }
+
+  revalidatePath(`/dashboard/${orgId}`, "layout");
+  return { success: true };
+}
+
+export async function removeGuardianFromPlayer(
+  orgId: string,
+  playerGuardianId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
+  if (!userId) return { success: false, error: "Unauthorized" };
+
+  await requireRole(orgId, userId, "admin");
+
+  // Verify the link belongs to a player in this org
+  const [link] = await db
+    .select({ id: playerGuardians.id })
+    .from(playerGuardians)
+    .innerJoin(players, eq(playerGuardians.playerId, players.id))
+    .where(
+      and(
+        eq(playerGuardians.id, playerGuardianId),
+        eq(players.organizationId, orgId),
+      ),
+    );
+  if (!link) return { success: false, error: "Link not found" };
+
+  await db.delete(playerGuardians).where(eq(playerGuardians.id, playerGuardianId));
+
+  revalidatePath(`/dashboard/${orgId}`, "layout");
+  return { success: true };
+}

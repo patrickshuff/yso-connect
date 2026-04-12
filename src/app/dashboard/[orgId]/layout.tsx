@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { organizations } from "@/db/schema";
-import { getMembership } from "@/lib/memberships";
+import { getMembership, getUserOrganizations } from "@/lib/memberships";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { BillingGate } from "@/components/dashboard/billing-gate";
 
@@ -39,10 +39,19 @@ export default async function OrgDashboardLayout({
     notFound();
   }
 
-  const isOwner = membership.role === "owner";
+  const userOrgs = await getUserOrganizations(userId);
+  const orgList = userOrgs.map((o) => ({ id: o.id, name: o.name }));
+
+  // membership is fetched above to enforce access; role is not currently used
+  // outside of per-action checks.
+  void membership;
 
   return (
-    <DashboardShell orgId={orgId} orgName={org.name} isOwner={isOwner}>
+    <DashboardShell
+      orgId={orgId}
+      orgName={org.name}
+      userOrgs={orgList}
+    >
       <BillingGate
         orgId={orgId}
         subscriptionStatus={org.subscriptionStatus}

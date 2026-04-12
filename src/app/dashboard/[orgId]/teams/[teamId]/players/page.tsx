@@ -20,10 +20,15 @@ import {
 } from "@/components/ui/table";
 import { AddPlayerDialog } from "@/components/dashboard/add-player-dialog";
 import { AddGuardianDialog } from "@/components/dashboard/add-guardian-dialog";
+import { EditGuardianDialog } from "@/components/dashboard/edit-guardian-dialog";
 
 interface GuardianRow {
-  name: string;
+  guardianId: string;
+  playerGuardianId: string;
+  firstName: string;
+  lastName: string;
   phone: string | null;
+  email: string | null;
   relationship: string;
 }
 
@@ -32,21 +37,6 @@ interface PlayerRow {
   firstName: string;
   lastName: string;
   guardians: GuardianRow[];
-}
-
-function relationshipLabel(r: string): string {
-  switch (r) {
-    case "mother":
-      return "Mother";
-    case "father":
-      return "Father";
-    case "grandparent":
-      return "Grandparent";
-    case "guardian":
-      return "Guardian";
-    default:
-      return "Other";
-  }
 }
 
 async function getTeam(orgId: string, teamId: string) {
@@ -79,10 +69,13 @@ async function getTeamPlayers(
   const playerIds = rows.map((p) => p.id);
   const guardianLinks = await db
     .select({
+      playerGuardianId: playerGuardians.id,
+      guardianId: guardians.id,
       playerId: playerGuardians.playerId,
       firstName: guardians.firstName,
       lastName: guardians.lastName,
       phone: guardians.phone,
+      email: guardians.email,
       relationship: playerGuardians.relationship,
     })
     .from(playerGuardians)
@@ -93,8 +86,12 @@ async function getTeamPlayers(
   for (const link of guardianLinks) {
     const list = byPlayer.get(link.playerId) ?? [];
     list.push({
-      name: `${link.firstName} ${link.lastName}`,
+      guardianId: link.guardianId,
+      playerGuardianId: link.playerGuardianId,
+      firstName: link.firstName,
+      lastName: link.lastName,
       phone: link.phone,
+      email: link.email,
       relationship: link.relationship,
     });
     byPlayer.set(link.playerId, list);
@@ -158,16 +155,23 @@ export default async function TeamPlayersPage({
                       <TableCell className="font-medium align-top">
                         {playerName}
                       </TableCell>
-                      <TableCell className="align-top text-muted-foreground">
+                      <TableCell className="align-top">
                         {player.guardians.length === 0 ? (
                           <span className="text-muted-foreground">—</span>
                         ) : (
-                          <div className="flex flex-col gap-0.5">
-                            {player.guardians.map((g, i) => (
-                              <span key={i}>
-                                {g.name} — {relationshipLabel(g.relationship)}
-                                {g.phone ? ` · ${g.phone}` : ""}
-                              </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {player.guardians.map((g) => (
+                              <EditGuardianDialog
+                                key={g.playerGuardianId}
+                                orgId={orgId}
+                                guardianId={g.guardianId}
+                                playerGuardianId={g.playerGuardianId}
+                                firstName={g.firstName}
+                                lastName={g.lastName}
+                                phone={g.phone}
+                                email={g.email}
+                                relationship={g.relationship}
+                              />
                             ))}
                           </div>
                         )}
