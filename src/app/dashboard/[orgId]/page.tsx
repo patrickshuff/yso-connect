@@ -1,5 +1,5 @@
 import { eq, count, sql } from "drizzle-orm";
-import { Plus, Upload } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/db";
 import { teams, teamPlayers, seasons } from "@/db/schema";
@@ -122,20 +122,6 @@ export default async function OrgOverviewPage({
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div>
-        <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          Quick Actions
-        </h3>
-        <div className="flex flex-wrap gap-3">
-          <Link href={`/dashboard/${orgId}/import`}>
-            <Button variant="outline">
-              <Upload className="size-4" data-icon="inline-start" />
-              Import Roster
-            </Button>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }
