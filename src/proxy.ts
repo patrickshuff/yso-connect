@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { NextRequest, NextFetchEvent } from "next/server";
+import type { NextRequest } from "next/server";
 
 const AUTH_PATHS = ["/sign-in", "/sign-up"];
 
@@ -32,7 +32,7 @@ function hasClerkSession(request: NextRequest): boolean {
   return request.cookies.has("__session");
 }
 
-export function proxy(request: NextRequest, _event: NextFetchEvent) {
+export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
   const authenticated = hasClerkSession(request);
 

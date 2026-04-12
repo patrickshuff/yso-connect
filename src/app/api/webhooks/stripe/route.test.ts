@@ -9,33 +9,49 @@ const {
   updateSetMock,
   insertMock,
   insertValuesMock,
+  stripeWebhookReturningMock,
   selectMock,
   selectWhereMock,
   sendEmailMock,
   buildPaymentFailedEmailMock,
+  loggerInfoMock,
   loggerWarnMock,
   loggerErrorMock,
   eqMock,
   organizationsTable,
   paymentsTable,
   funnelEventsTable,
+  stripeWebhookEventsTable,
 } = vi.hoisted(() => {
   const constructEventMock = vi.fn();
   const subscriptionRetrieveMock = vi.fn();
 
-  const updateWhereMock = vi.fn(async () => []);
+  const updateWhereMock = vi.fn(async () => [] as unknown[]);
   const updateSetMock = vi.fn(() => ({ where: updateWhereMock }));
   const updateMock = vi.fn(() => ({ set: updateSetMock }));
 
-  const insertValuesMock = vi.fn(async () => []);
-  const insertMock = vi.fn(() => ({ values: insertValuesMock }));
+  const stripeWebhookReturningMock = vi.fn(async () => [{ eventId: "evt_1" }] as unknown[]);
+  const stripeWebhookInsertValuesMock = vi.fn(() => ({
+    onConflictDoNothing: () => ({
+      returning: stripeWebhookReturningMock,
+    }),
+  }));
+  const insertValuesMock = vi.fn(async () => [] as unknown[]);
+  const stripeWebhookEventsTable = { eventId: "stripe_webhook_events.event_id" };
+  const insertMock = vi.fn((table) => {
+    if (table === stripeWebhookEventsTable) {
+      return { values: stripeWebhookInsertValuesMock };
+    }
+    return { values: insertValuesMock };
+  });
 
-  const selectWhereMock = vi.fn(async () => []);
+  const selectWhereMock = vi.fn(async () => [] as unknown[]);
   const selectFromMock = vi.fn(() => ({ where: selectWhereMock }));
   const selectMock = vi.fn(() => ({ from: selectFromMock }));
 
   const sendEmailMock = vi.fn(async () => ({ success: true, id: "email_1" }));
   const buildPaymentFailedEmailMock = vi.fn(() => "<html>Payment Failed</html>");
+  const loggerInfoMock = vi.fn();
   const loggerWarnMock = vi.fn();
   const loggerErrorMock = vi.fn();
   const eqMock = vi.fn((left, right) => ({ left, right }));
@@ -55,16 +71,19 @@ const {
     updateSetMock,
     insertMock,
     insertValuesMock,
+    stripeWebhookReturningMock,
     selectMock,
     selectWhereMock,
     sendEmailMock,
     buildPaymentFailedEmailMock,
+    loggerInfoMock,
     loggerWarnMock,
     loggerErrorMock,
     eqMock,
     organizationsTable,
     paymentsTable,
     funnelEventsTable,
+    stripeWebhookEventsTable,
   };
 });
 
@@ -95,6 +114,7 @@ vi.mock("@/db/schema", () => ({
   organizations: organizationsTable,
   payments: paymentsTable,
   funnelEvents: funnelEventsTable,
+  stripeWebhookEvents: stripeWebhookEventsTable,
 }));
 
 vi.mock("@/lib/email", () => ({
@@ -107,6 +127,7 @@ vi.mock("@/lib/email-templates", () => ({
 
 vi.mock("@/lib/logger", () => ({
   logger: {
+    info: loggerInfoMock,
     warn: loggerWarnMock,
     error: loggerErrorMock,
   },
@@ -128,6 +149,7 @@ function makeRequest(): Request {
 describe("POST /api/webhooks/stripe", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stripeWebhookReturningMock.mockResolvedValue([{ eventId: "evt_1" }]);
   });
 
   it("marks org as past_due, emails admin, and logs funnel event on invoice.payment_failed", async () => {
@@ -206,6 +228,85 @@ describe("POST /api/webhooks/stripe", () => {
         eventName: "subscription_canceled",
         organizationId: "org_2",
         organizationSlug: "acme-soccer-2",
+      }),
+    );
+  });
+
+  it("uses non-null fallback organizationSlug for webhook telemetry when org slug lookup is missing", async () => {
+    constructEventMock.mockReturnValue({
+      type: "invoice.payment_failed",
+      data: {
+        object: {
+          parent: {
+            subscription_details: {
+              subscription: "sub_missing_slug",
+            },
+          },
+        },
+      },
+    });
+    subscriptionRetrieveMock.mockResolvedValue({
+      metadata: { orgId: "org_no_slug" },
+      status: "past_due",
+      items: { data: [{ current_period_end: 2000000000 }] },
+    });
+    // First select returns no slug, second returns org for notification email path.
+    selectWhereMock
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { id: "org_no_slug", name: "No Slug Org", contactEmail: "billing@noslug.test" },
+      ]);
+
+    const res = await POST(makeRequest() as never);
+
+    expect(res.status).toBe(200);
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventName: "payment_failed",
+        organizationId: "org_no_slug",
+        organizationSlug: "unknown-org-org_no_slug",
+      }),
+    );
+    expect(loggerWarnMock).toHaveBeenCalledWith(
+      "Billing webhook telemetry missing organization slug; using fallback",
+      expect.objectContaining({
+        organizationId: "org_no_slug",
+        eventName: "payment_failed",
+        fallbackSlug: "unknown-org-org_no_slug",
+      }),
+    );
+  });
+
+  it("skips side effects for duplicate Stripe webhook deliveries", async () => {
+    constructEventMock.mockReturnValue({
+      id: "evt_duplicate",
+      type: "invoice.payment_failed",
+      data: {
+        object: {
+          parent: {
+            subscription_details: {
+              subscription: "sub_duplicate",
+            },
+          },
+        },
+      },
+    });
+    stripeWebhookReturningMock.mockResolvedValueOnce([]);
+
+    const res = await POST(makeRequest() as never);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ received: true, duplicate: true });
+    expect(subscriptionRetrieveMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(sendEmailMock).not.toHaveBeenCalled();
+    expect(insertValuesMock).not.toHaveBeenCalled();
+    expect(loggerInfoMock).toHaveBeenCalledWith(
+      "Skipping duplicate Stripe webhook delivery",
+      expect.objectContaining({
+        eventId: "evt_duplicate",
+        eventType: "invoice.payment_failed",
       }),
     );
   });

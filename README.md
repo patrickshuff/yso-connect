@@ -52,3 +52,7 @@ Multi-tenant platform for youth sports organizations. Manages teams, rosters, sc
 | `yarn build`  | Production build         |
 | `yarn start`  | Start production server  |
 | `yarn lint`   | Run ESLint               |
+
+## Runbooks
+
+- `docs/runbooks/trial-reminder-telemetry-guardrails.md` - Guardrails, alert thresholds, and triage flow for trial reminder attribution telemetry.

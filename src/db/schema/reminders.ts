@@ -1,7 +1,9 @@
 import {
   boolean,
+  integer,
   index,
   pgTable,
+  text,
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -19,6 +21,12 @@ export const reminders = pgTable(
     reminderType: reminderTypeEnum("reminder_type").notNull(),
     sent: boolean("sent").notNull().default(false),
     sentAt: timestamp("sent_at", { withTimezone: true }),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
+    lastError: text("last_error"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -27,5 +35,6 @@ export const reminders = pgTable(
     index("reminders_event_id_idx").on(table.eventId),
     index("reminders_reminder_time_idx").on(table.reminderTime),
     index("reminders_sent_idx").on(table.sent),
+    index("reminders_next_attempt_at_idx").on(table.nextAttemptAt),
   ],
 );

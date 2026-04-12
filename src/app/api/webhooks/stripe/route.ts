@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/db";
-import { funnelEvents, organizations, payments } from "@/db/schema";
+import {
+  funnelEvents,
+  organizations,
+  payments,
+  stripeWebhookEvents,
+} from "@/db/schema";
 import { sendEmail } from "@/lib/email";
 import { buildPaymentFailedEmail } from "@/lib/email-templates";
 import { logger } from "@/lib/logger";
@@ -39,6 +44,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  const isFirstDelivery = await claimWebhookEvent(event.id, event.type);
+  if (!isFirstDelivery) {
+    logger.info("Skipping duplicate Stripe webhook delivery", {
+      eventId: event.id,
+      eventType: event.type,
+    });
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     await handleCheckoutCompleted(session);
@@ -54,6 +68,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   return NextResponse.json({ received: true });
+}
+
+async function claimWebhookEvent(
+  eventId: string,
+  eventType: Stripe.Event.Type,
+): Promise<boolean> {
+  const inserted = await db
+    .insert(stripeWebhookEvents)
+    .values({
+      eventId,
+      eventType,
+    })
+    .onConflictDoNothing()
+    .returning({ eventId: stripeWebhookEvents.eventId });
+
+  return inserted.length > 0;
 }
 
 async function handleCheckoutCompleted(
@@ -266,11 +296,35 @@ async function logBillingFunnelEvent(
   organizationId: string,
   organizationSlug?: string | null,
 ): Promise<void> {
+  const normalizedOrganizationSlug = normalizeOrganizationSlug(
+    organizationSlug,
+    organizationId,
+    eventName,
+  );
+
   await db.insert(funnelEvents).values({
     eventName,
     organizationId,
-    organizationSlug,
+    organizationSlug: normalizedOrganizationSlug,
     location: "stripe_webhook",
     pagePath: "/api/webhooks/stripe",
   });
+}
+
+function normalizeOrganizationSlug(
+  organizationSlug: string | null | undefined,
+  organizationId: string,
+  eventName: string,
+): string {
+  if (organizationSlug && organizationSlug.trim().length > 0) {
+    return organizationSlug.trim();
+  }
+
+  const fallbackSlug = `unknown-org-${organizationId}`;
+  logger.warn("Billing webhook telemetry missing organization slug; using fallback", {
+    organizationId,
+    eventName,
+    fallbackSlug,
+  });
+  return fallbackSlug;
 }

@@ -92,6 +92,7 @@ export async function getUpcomingReminders() {
       and(
         eq(reminders.sent, false),
         lte(reminders.reminderTime, now),
+        lte(reminders.nextAttemptAt, now),
         eq(events.isCancelled, false),
       ),
     );
@@ -108,17 +109,74 @@ function formatReminderTime(startTime: Date): string {
 }
 
 /**
- * Atomically claim a reminder by setting sent=true only if still unsent.
- * Returns true if this call claimed it, false if already sent (another run got it first).
+ * Atomically claim a reminder for processing by leasing nextAttemptAt.
+ * Returns true if this call claimed it, false if another run already owns an active lease.
  */
 async function claimReminder(reminderId: string): Promise<boolean> {
+  const now = new Date();
+  const leaseUntil = new Date(now.getTime() + 5 * 60 * 1000);
+
   const result = await db
     .update(reminders)
-    .set({ sent: true, sentAt: new Date() })
-    .where(and(eq(reminders.id, reminderId), eq(reminders.sent, false)))
+    .set({
+      nextAttemptAt: leaseUntil,
+      lastAttemptAt: now,
+    })
+    .where(
+      and(
+        eq(reminders.id, reminderId),
+        eq(reminders.sent, false),
+        lte(reminders.nextAttemptAt, now),
+      ),
+    )
     .returning({ id: reminders.id });
 
   return result.length > 0;
+}
+
+async function markReminderSent(reminderId: string): Promise<void> {
+  await db
+    .update(reminders)
+    .set({
+      sent: true,
+      sentAt: new Date(),
+      lastError: null,
+    })
+    .where(eq(reminders.id, reminderId));
+}
+
+function getRetryBackoffMs(attemptCount: number): number {
+  const minute = 60 * 1000;
+  if (attemptCount <= 1) return 5 * minute;
+  if (attemptCount === 2) return 15 * minute;
+  if (attemptCount === 3) return 60 * minute;
+  return 6 * 60 * minute;
+}
+
+async function markReminderFailed(
+  reminderId: string,
+  errorMessage: string,
+): Promise<void> {
+  const now = new Date();
+  const [row] = await db
+    .select({ attemptCount: reminders.attemptCount })
+    .from(reminders)
+    .where(eq(reminders.id, reminderId));
+  const nextAttemptAt = new Date(
+    now.getTime() + getRetryBackoffMs((row?.attemptCount ?? 0) + 1),
+  );
+
+  await db
+    .update(reminders)
+    .set({
+      sent: false,
+      sentAt: null,
+      nextAttemptAt,
+      lastAttemptAt: now,
+      attemptCount: (row?.attemptCount ?? 0) + 1,
+      lastError: errorMessage,
+    })
+    .where(eq(reminders.id, reminderId));
 }
 
 /**
@@ -149,6 +207,7 @@ export async function processReminder(
   }
 
   if (event.isCancelled) {
+    await markReminderSent(reminderId);
     logger.info("Skipped reminder for cancelled event", {
       reminderId,
       eventId: event.id,
@@ -180,14 +239,16 @@ export async function processReminder(
       recipientCount: result.recipientCount,
       deliveryCount: result.deliveryCount,
     });
+    await markReminderSent(reminderId);
   } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
+    await markReminderFailed(reminderId, errorMessage);
     logger.error("Failed to send reminder notification", {
       reminderId,
       eventId: event.id,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
     });
-    // Note: reminder stays claimed (sent=true) to prevent retry storms.
-    // A separate recovery mechanism should handle failed sends if needed.
     throw error;
   }
 

@@ -1,0 +1,67 @@
+name: Trial Reminder Telemetry Guardrails
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_URL: ${{ secrets.APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Validate required secrets
+        run: |
+          missing=0
+          if [ -z "$APP_URL" ]; then
+            echo "Missing secret: APP_URL"
+            missing=1
+          fi
+          if [ -z "$CRON_SECRET" ]; then
+            echo "Missing secret: CRON_SECRET"
+            missing=1
+          fi
+          if [ "$missing" -eq 1 ]; then
+            echo "Guardrail run cannot execute without required secrets."
+            exit 1
+          fi
+
+      - name: Run trial reminder guardrails
+        run: |
+          stamp="$(date -u +%Y-%m-%d)-${GITHUB_RUN_ID}"
+          out="docs/evidence/jar-199-telemetry-guardrail-evidence-${stamp}.md"
+          yarn telemetry:guardrails:evidence -- --issue JAR-199 --out "$out"
+          echo "EVIDENCE_PATH=$out" >> "$GITHUB_ENV"
+
+      - name: Upload evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trial-reminder-guardrail-evidence
+          path: ${{ env.EVIDENCE_PATH }}
+
+      - name: Publish run summary
+        run: |
+          {
+            echo "## Trial Reminder Telemetry Guardrails"
+            echo ""
+            echo "- Evidence: \\`${EVIDENCE_PATH}\\`"
+            echo "- Operator runbook: docs/runbooks/trial-reminder-telemetry-guardrails.md"
+            echo "- Owner: CTO (engineering)"
+            echo "- Escalation: CMO + CTO when campaign attribution is impacted"
+          } >> "$GITHUB_STEP_SUMMARY"

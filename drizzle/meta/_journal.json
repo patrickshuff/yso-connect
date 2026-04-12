@@ -36,6 +36,13 @@
       "when": 1775865000000,
       "tag": "0004_subscription_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775898000000,
+      "tag": "0005_webhook_idempotency_reminder_retry",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { proxy } from "./proxy";
-import type { NextFetchEvent } from "next/server";
 
 function makeRequest(path: string, cookieHeader?: string): NextRequest {
   const headers = new Headers();
@@ -9,24 +8,19 @@ function makeRequest(path: string, cookieHeader?: string): NextRequest {
   return new NextRequest(`http://localhost${path}`, { headers });
 }
 
-const mockEvent = {
-  waitUntil: vi.fn(),
-  passThroughOnException: vi.fn(),
-} as unknown as NextFetchEvent;
-
 describe("proxy", () => {
   it("does not redirect unauthenticated requests to cron routes", async () => {
-    const response = await proxy(makeRequest("/api/cron/reminders"), mockEvent);
+    const response = await proxy(makeRequest("/api/cron/reminders"));
     expect(response).toBeUndefined();
   });
 
   it("does not redirect unauthenticated requests to trial reminder cron routes", async () => {
-    const response = await proxy(makeRequest("/api/cron/trial-reminders"), mockEvent);
+    const response = await proxy(makeRequest("/api/cron/trial-reminders"));
     expect(response).toBeUndefined();
   });
 
   it("does not redirect unauthenticated requests to analytics routes", async () => {
-    const response = await proxy(makeRequest("/api/analytics/funnel"), mockEvent);
+    const response = await proxy(makeRequest("/api/analytics/funnel"));
     expect(response).toBeUndefined();
   });
 
@@ -34,8 +28,7 @@ describe("proxy", () => {
     const response = (await proxy(
       makeRequest(
         "/dashboard/org_1/billing?utm_source=email&utm_medium=trial_reminder&utm_campaign=trial_25d",
-      ),
-      mockEvent
+      )
     )) as NextResponse;
 
     expect(response).toBeDefined();
@@ -60,8 +53,7 @@ describe("proxy", () => {
     const response = (await proxy(
       makeRequest(
         "/dashboard/org_1/billing?utm_source=email&utm_medium=trial_reminder&coupon=free_week",
-      ),
-      mockEvent
+      )
     )) as NextResponse;
 
     expect(response).toBeDefined();
@@ -79,7 +71,7 @@ describe("proxy", () => {
   });
 
   it("redirects authenticated users away from auth pages to dashboard by default", async () => {
-    const response = (await proxy(makeRequest("/sign-in", "__session=test-token"), mockEvent)) as NextResponse;
+    const response = (await proxy(makeRequest("/sign-in", "__session=test-token"))) as NextResponse;
     expect(response).toBeDefined();
 
     const location = response?.headers.get("location");
@@ -88,8 +80,7 @@ describe("proxy", () => {
 
   it("redirects authenticated users away from auth pages to redirect_url if present", async () => {
     const response = (await proxy(
-      makeRequest("/sign-in?redirect_url=/dashboard/org_1/settings", "__session=test-token"),
-      mockEvent
+      makeRequest("/sign-in?redirect_url=/dashboard/org_1/settings", "__session=test-token")
     )) as NextResponse;
     expect(response).toBeDefined();
 
@@ -99,8 +90,7 @@ describe("proxy", () => {
 
   it("preserves UTM params when redirecting authenticated users away from auth pages", async () => {
     const response = (await proxy(
-      makeRequest("/sign-in?utm_source=ad&utm_medium=cpc", "__session=test-token"),
-      mockEvent
+      makeRequest("/sign-in?utm_source=ad&utm_medium=cpc", "__session=test-token")
     )) as NextResponse;
     expect(response).toBeDefined();
 

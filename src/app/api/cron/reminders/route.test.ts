@@ -47,6 +47,7 @@ describe("GET /api/cron/reminders", () => {
   const ORIGINAL_CRON_SECRET = process.env.CRON_SECRET;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     // Set a known secret by default; individual tests override as needed.
     process.env.CRON_SECRET = "test-secret";
   });
@@ -135,5 +136,56 @@ describe("GET /api/cron/reminders", () => {
       reason: "concurrent execution",
     });
     expect(withCronSafetyMock).toHaveBeenCalledWith("reminders", expect.any(Function));
+  });
+
+  it("executes reminder pipeline and reports processing failures", async () => {
+    getUpcomingRemindersMock.mockResolvedValueOnce([
+      { reminder: { id: "rem-1" }, event: { id: "event-1" } },
+      { reminder: { id: "rem-2" }, event: { id: "event-2" } },
+      { reminder: { id: "rem-3" }, event: { id: "event-3" } },
+    ]);
+    processReminderMock
+      .mockResolvedValueOnce(true)
+      .mockRejectedValueOnce(new Error("sms delivery failed"))
+      .mockResolvedValueOnce(false);
+
+    withCronSafetyMock.mockImplementationOnce(
+      async (
+        _jobName: string,
+        handler: () => Promise<{ found: number; processed: number; failed: number }>,
+      ) => {
+        const result = await handler();
+        return {
+          runId: "run-live-reminders",
+          status: "completed",
+          itemsFound: result.found,
+          itemsProcessed: result.processed,
+          itemsFailed: result.failed,
+          durationMs: 19,
+        };
+      },
+    );
+
+    const res = await GET(makeRequest("Bearer test-secret"));
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({
+      runId: "run-live-reminders",
+      status: "completed",
+      found: 3,
+      processed: 1,
+      failed: 1,
+      durationMs: 19,
+    });
+    expect(getUpcomingRemindersMock).toHaveBeenCalledOnce();
+    expect(processReminderMock).toHaveBeenCalledTimes(3);
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      "Failed to process reminder",
+      expect.objectContaining({
+        reminderId: "rem-2",
+        error: "sms delivery failed",
+      }),
+    );
   });
 });

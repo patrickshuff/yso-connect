@@ -24,3 +24,4 @@ export { paymentItems } from "./payment-items";
 export { payments } from "./payments";
 export { smsConsents } from "./sms-consents";
 export { cronRuns } from "./cron-runs";
+export { stripeWebhookEvents } from "./stripe-webhook-events";

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { state, selectMock, fromMock, whereMock, eqMock, andMock } = vi.hoisted(
+const { state, selectMock, eqMock, andMock } = vi.hoisted(
   () => {
     const state = {
       membership: null as
@@ -19,7 +19,7 @@ const { state, selectMock, fromMock, whereMock, eqMock, andMock } = vi.hoisted(
     const eqMock = vi.fn((field, value) => ({ eq: [field, value] }));
     const andMock = vi.fn((...clauses) => ({ and: clauses }));
 
-    return { state, selectMock, fromMock, whereMock, eqMock, andMock };
+    return { state, selectMock, eqMock, andMock };
   },
 );
 

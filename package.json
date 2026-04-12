@@ -7,8 +7,12 @@
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "lint": "eslint",
+    "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check": "npm run lint && npm run type-check && npm run test",
+    "telemetry:guardrails:evidence": "node scripts/capture-trial-reminder-guardrail-evidence.mjs",
+    "telemetry:guardrails:evidence:dry-run": "node scripts/capture-trial-reminder-guardrail-evidence.mjs --dry-run --issue JAR-199 --out docs/evidence/jar-199-telemetry-guardrail-evidence-dry-run.md",
     "prepare": "husky"
   },
   "dependencies": {

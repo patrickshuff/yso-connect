@@ -14,12 +14,12 @@ const {
     interestSubmissionCount: 0,
   };
 
-  const whereFunnelMock = vi.fn(async () => [{ value: 0 }]);
+  const whereFunnelMock = vi.fn(async () => [{ value: 0 }] as unknown[]);
   const fromFunnelMock = vi.fn(() => ({ where: whereFunnelMock }));
 
   const whereSubmissionsMock = vi.fn(async () => [
     { value: state.interestSubmissionCount },
-  ]);
+  ] as unknown[]);
   const fromSubmissionsMock = vi.fn(() => ({ where: whereSubmissionsMock }));
 
   const funnelEventsTable = { eventName: "eventName", createdAt: "createdAt" };
@@ -157,8 +157,8 @@ describe("getWeeklyKpiMetrics", () => {
 
 describe("getCurrentLeadChannelBreakdown", () => {
   it("returns empty array when no submissions", async () => {
-    const fromAllMock = vi.fn(async () => []);
-    selectMock.mockReturnValue({ from: () => ({ where: fromAllMock }) });
+    const fromAllMock = vi.fn(async () => [] as unknown[]);
+    (selectMock as unknown as { mockReturnValue: (v: unknown) => unknown }).mockReturnValue({ from: () => ({ where: fromAllMock }) });
 
     const result = await getCurrentLeadChannelBreakdown();
     expect(result).toEqual([]);
@@ -171,8 +171,8 @@ describe("getCurrentLeadChannelBreakdown", () => {
       { utmSource: "google", utmMedium: "cpc" },
       { utmSource: null, utmMedium: null },
     ];
-    const fromAllMock = vi.fn(async () => rows);
-    selectMock.mockReturnValue({ from: () => ({ where: fromAllMock }) });
+    const fromAllMock = vi.fn(async () => rows as unknown[]);
+    (selectMock as unknown as { mockReturnValue: (v: unknown) => unknown }).mockReturnValue({ from: () => ({ where: fromAllMock }) });
 
     const result = await getCurrentLeadChannelBreakdown();
 
@@ -199,8 +199,8 @@ describe("getCurrentLeadChannelBreakdown", () => {
       { utmSource: "b", utmMedium: "y" },
       { utmSource: "b", utmMedium: "y" },
     ];
-    const fromAllMock = vi.fn(async () => rows);
-    selectMock.mockReturnValue({ from: () => ({ where: fromAllMock }) });
+    const fromAllMock = vi.fn(async () => rows as unknown[]);
+    (selectMock as unknown as { mockReturnValue: (v: unknown) => unknown }).mockReturnValue({ from: () => ({ where: fromAllMock }) });
 
     const result = await getCurrentLeadChannelBreakdown();
     expect(result[0].source).toBe("b");
@@ -212,8 +212,8 @@ describe("getCurrentLeadChannelBreakdown", () => {
       utmSource: `src${i}`,
       utmMedium: "x",
     }));
-    const fromAllMock = vi.fn(async () => rows);
-    selectMock.mockReturnValue({ from: () => ({ where: fromAllMock }) });
+    const fromAllMock = vi.fn(async () => rows as unknown[]);
+    (selectMock as unknown as { mockReturnValue: (v: unknown) => unknown }).mockReturnValue({ from: () => ({ where: fromAllMock }) });
 
     const result = await getCurrentLeadChannelBreakdown(3);
     expect(result).toHaveLength(3);
