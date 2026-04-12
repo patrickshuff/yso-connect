@@ -98,6 +98,7 @@ export async function quickSetupTeam(
           organizationId: org.id,
           seasonId: season.id,
           name: teamName.trim(),
+          sport: sportName.trim() || null,
         })
         .returning();
 
