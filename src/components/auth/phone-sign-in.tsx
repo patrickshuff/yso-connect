@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth, useSignIn } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -71,6 +71,24 @@ export function PhoneSignIn() {
     }
   }, [isSignedIn, router]);
 
+  // Auto-send a code if the user was bounced here from sign-up with a
+  // prefilled identifier — they already pressed "Send code" on the previous
+  // form, so making them press it again is a dead click.
+  const autoSentRef = useRef(false);
+  useEffect(() => {
+    if (autoSentRef.current) return;
+    if (!signIn) return;
+    if (isSignedIn) return;
+    if (prefillPhoneE164 && displayPhone) {
+      autoSentRef.current = true;
+      void sendCodeFor("phone");
+    } else if (prefillEmail && email) {
+      autoSentRef.current = true;
+      void sendCodeFor("email");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signIn, isSignedIn]);
+
   if (isSignedIn) return null;
 
   const loading = fetchStatus === "fetching";
@@ -93,18 +111,15 @@ export function PhoneSignIn() {
     setError(null);
   }
 
-  async function handleSendCode(e: React.FormEvent) {
-    e.preventDefault();
+  async function sendCodeFor(target: "phone" | "email") {
     if (!signIn) return;
-
     if (isSignedIn) {
       router.replace("/dashboard");
       return;
     }
-
     setError(null);
 
-    if (method === "phone") {
+    if (target === "phone") {
       const { error: createErr } = await signIn.create({
         identifier: toE164(displayPhone),
       });
@@ -131,6 +146,11 @@ export function PhoneSignIn() {
     }
 
     setStep("otp");
+  }
+
+  async function handleSendCode(e: React.FormEvent) {
+    e.preventDefault();
+    await sendCodeFor(method);
   }
 
   async function handleVerifyOtp(e: React.FormEvent) {
