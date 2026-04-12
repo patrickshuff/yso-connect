@@ -157,6 +157,7 @@ export interface GuardianConfirmationEmailParams {
   playerName: string;
   teamName: string;
   orgName: string;
+  inviterName: string;
   appUrl: string;
   guardianId: string;
 }
@@ -164,7 +165,8 @@ export interface GuardianConfirmationEmailParams {
 export function buildGuardianConfirmationEmail(
   params: GuardianConfirmationEmailParams,
 ): string {
-  const { firstName, playerName, teamName, appUrl, guardianId } = params;
+  const { firstName, playerName, teamName, inviterName, appUrl, guardianId } =
+    params;
   const confirmUrl = buildConfirmationUrl(appUrl, guardianId);
   const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardianId);
   const preferencesUrl = buildPreferencesUrl(appUrl, guardianId);
@@ -176,13 +178,14 @@ export function buildGuardianConfirmationEmail(
     <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#111827;">Hi ${escapeHtml(firstName)},</h1>
 
     <p style="margin:0 0 16px;font-size:16px;color:#374151;line-height:1.7;">
-      You've been added as a guardian for <strong>${escapeHtml(playerName)}</strong>
-      on <strong>${escapeHtml(teamName)}</strong>.
+      <strong>${escapeHtml(inviterName)}</strong> added you as a guardian for
+      <strong>${escapeHtml(playerName)}</strong> on
+      <strong>${escapeHtml(teamName)}</strong>.
     </p>
 
     <p style="margin:0 0 24px;font-size:16px;color:#374151;line-height:1.7;">
-      Click the button below to confirm you'd like to receive schedule updates,
-      reminders, and messages about ${escapeHtml(playerName)}'s team.
+      Tap the button below to confirm you'd like to receive schedule updates,
+      reminders, and team messages about ${escapeHtml(playerName)}.
     </p>
 
     <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
