@@ -291,7 +291,10 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
         attempts += 1;
 
         const deliveryId = await createPendingDelivery(message.id, guardian.id, "sms");
-        const result = await sendSMS(guardian.phone, body);
+        // TCPA requires an opt-out in at least the first message per campaign.
+        // Appending it to every message is the safest and most common approach.
+        const smsBody = `${senderLabel}: ${body}\n\nReply STOP to opt out`;
+        const result = await sendSMS(guardian.phone, smsBody);
 
         if (result.success) {
           sms.sent += 1;

@@ -1,5 +1,13 @@
-import { buildUnsubscribeUrl } from "@/lib/unsubscribe-token";
+import {
+  buildUnsubscribeUrl,
+  signUnsubscribeToken,
+} from "@/lib/unsubscribe-token";
 import { buildConfirmationUrl } from "@/lib/confirmation-token";
+
+function buildPreferencesUrl(appUrl: string, guardianId: string): string {
+  const token = signUnsubscribeToken(guardianId);
+  return `${appUrl}/guardian/preferences?g=${guardianId}&t=${token}`;
+}
 
 function escapeHtml(str: string): string {
   return str
@@ -74,11 +82,18 @@ function standardHeader(orgName: string): string {
   </table>`;
 }
 
-function standardFooter(label: string, unsubscribeUrl: string): string {
+function standardFooter(
+  label: string,
+  unsubscribeUrl: string,
+  preferencesUrl?: string,
+): string {
+  const prefsLink = preferencesUrl
+    ? `&nbsp;&bull;&nbsp;<a href="${preferencesUrl}" style="color:#6b7280;text-decoration:underline;">Manage preferences</a>`
+    : "";
   return `<p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
     You received this email from <strong>${escapeHtml(label)}</strong> on YSO Connect.
     &nbsp;&bull;&nbsp;
-    <a href="${unsubscribeUrl}" style="color:#6b7280;text-decoration:underline;">Unsubscribe</a>
+    <a href="${unsubscribeUrl}" style="color:#6b7280;text-decoration:underline;">Unsubscribe</a>${prefsLink}
   </p>`;
 }
 
@@ -92,6 +107,7 @@ export interface WelcomeEmailParams {
 export function buildWelcomeEmail(params: WelcomeEmailParams): string {
   const { firstName, orgName, appUrl, guardianId } = params;
   const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardianId);
+  const preferencesUrl = buildPreferencesUrl(appUrl, guardianId);
   const loginUrl = `${appUrl}/sign-in`;
 
   const header = standardHeader(orgName);
@@ -131,7 +147,7 @@ export function buildWelcomeEmail(params: WelcomeEmailParams): string {
     </table>
   `;
 
-  const footer = standardFooter(orgName, unsubscribeUrl);
+  const footer = standardFooter(orgName, unsubscribeUrl, preferencesUrl);
 
   return baseLayout(header, body, footer);
 }
@@ -151,6 +167,7 @@ export function buildGuardianConfirmationEmail(
   const { firstName, playerName, teamName, appUrl, guardianId } = params;
   const confirmUrl = buildConfirmationUrl(appUrl, guardianId);
   const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardianId);
+  const preferencesUrl = buildPreferencesUrl(appUrl, guardianId);
 
   // Guardians typically only recognize the team name, not the org.
   const header = standardHeader(teamName);
@@ -181,7 +198,7 @@ export function buildGuardianConfirmationEmail(
     </p>
   `;
 
-  const footer = standardFooter(teamName, unsubscribeUrl);
+  const footer = standardFooter(teamName, unsubscribeUrl, preferencesUrl);
 
   return baseLayout(header, body, footer);
 }
@@ -197,6 +214,7 @@ export interface BroadcastEmailParams {
 export function buildBroadcastEmail(params: BroadcastEmailParams): string {
   const { orgName, subject, body, appUrl, guardianId } = params;
   const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardianId);
+  const preferencesUrl = buildPreferencesUrl(appUrl, guardianId);
 
   const header = standardHeader(orgName);
 
@@ -207,7 +225,7 @@ export function buildBroadcastEmail(params: BroadcastEmailParams): string {
     <p style="margin:0;font-size:16px;color:#374151;line-height:1.75;">${formattedBody}</p>
   `;
 
-  const footer = standardFooter(orgName, unsubscribeUrl);
+  const footer = standardFooter(orgName, unsubscribeUrl, preferencesUrl);
 
   return baseLayout(header, bodyHtml, footer);
 }
