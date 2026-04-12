@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useSignUp } from "@clerk/nextjs";
+import { useCallback, useState } from "react";
+import { useClerk, useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -35,6 +35,7 @@ function toE164(formatted: string): string {
 
 export function PhoneSignUp() {
   const router = useRouter();
+  const { setActive } = useClerk();
   const { signUp, fetchStatus } = useSignUp();
 
   const [method, setMethod] = useState<Method>("phone");
@@ -90,6 +91,12 @@ export function PhoneSignUp() {
     setStep("otp");
   }
 
+  const activateSession = useCallback(async () => {
+    if (!signUp?.createdSessionId || !setActive) return;
+    await setActive({ session: signUp.createdSessionId });
+    router.push("/dashboard");
+  }, [signUp, setActive, router]);
+
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
     if (!signUp) return;
@@ -103,14 +110,20 @@ export function PhoneSignUp() {
       if (verifyErr) { setError(verifyErr.message); return; }
     }
 
-    // signUp is a reactive signal in Clerk v7 — status reflects current state after await
-    if (signUp.status !== "complete") {
-      const missing = (signUp.missingFields ?? []).join(", ");
-      setError(missing ? `Needs: ${missing}` : "Sign-up incomplete. Please try again.");
+    if (signUp.status === "complete") {
+      // Name not required by Clerk — activate session immediately
+      await activateSession();
       return;
     }
 
-    setStep("profile");
+    // Name fields still required — show profile step
+    const missing = signUp.missingFields ?? [];
+    if (missing.some((f) => f === "first_name" || f === "last_name")) {
+      setStep("profile");
+      return;
+    }
+
+    setError(`Missing required fields: ${missing.join(", ")}`);
   }
 
   async function handleFinalize(e: React.FormEvent) {
@@ -124,19 +137,12 @@ export function PhoneSignUp() {
       return;
     }
 
-    const { error: finalizeErr } = await signUp.finalize({
-      navigate: ({ decorateUrl }) => {
-        const url = decorateUrl("/dashboard");
-        if (url.startsWith("http")) {
-          window.location.href = url;
-        } else {
-          router.push(url);
-        }
-      },
-    });
-    if (finalizeErr) {
-      setError(finalizeErr.message);
+    if (signUp.status !== "complete") {
+      setError("Sign-up incomplete after name update. Please try again.");
+      return;
     }
+
+    await activateSession();
   }
 
   const sentTo = method === "phone" ? displayPhone : email;
