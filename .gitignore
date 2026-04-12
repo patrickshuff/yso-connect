@@ -42,6 +42,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# playwright
+playwright-report/
+test-results/
+
 # python virtual environments
 .venv/
 venv/

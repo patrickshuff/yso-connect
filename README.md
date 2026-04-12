@@ -56,3 +56,23 @@ Multi-tenant platform for youth sports organizations. Manages teams, rosters, sc
 ## Runbooks
 
 - `docs/runbooks/trial-reminder-telemetry-guardrails.md` - Guardrails, alert thresholds, and triage flow for trial reminder attribution telemetry.
+
+## Testing & CI
+
+### Local Tests
+
+- **Unit tests:** `yarn test` (vitest)
+- **E2E tests:** `yarn e2e:local` (playwright)
+  - Requires `.env.local` with `E2E_PHONE_NUMBER`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `DATABASE_URL`.
+  - Automatically starts the dev server if it's not already running.
+- **Combined check:** `yarn check` (lint, type-check, unit tests)
+
+### CI Expectations
+
+The CI gate (GitHub Actions) runs:
+- **Lint & Type-check**
+- **Unit tests**
+- **E2E tests** (on pull requests and main branch)
+  - PRs require the E2E check to pass for merging.
+  - The E2E job runs serially with one worker to avoid OTP delivery collisions.
+  - Required secrets in GitHub Actions: `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `E2E_PHONE_NUMBER`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`.
