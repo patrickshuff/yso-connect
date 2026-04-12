@@ -5,7 +5,6 @@ import { ArrowLeft } from "lucide-react";
 import { db } from "@/db";
 import { teams, organizations } from "@/db/schema";
 import { cn } from "@/lib/utils";
-import { TeamSubNav } from "@/components/dashboard/team-sub-nav";
 
 async function getTeamAndOrg(orgId: string, teamId: string) {
   const [row] = await db
@@ -48,7 +47,6 @@ export default async function TeamLayout({
             {row.teamName}
           </h2>
         </div>
-        <TeamSubNav orgId={orgId} teamId={teamId} />
       </div>
       {children}
     </div>

@@ -1,5 +1,6 @@
 import { eq, and, asc, inArray, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Users, CalendarDays } from "lucide-react";
 import { db } from "@/db";
 import {
@@ -182,7 +183,12 @@ export default async function TeamDetailPage({
                     return (
                       <TableRow key={player.id}>
                         <TableCell className="font-medium align-top">
-                          {playerName}
+                          <Link
+                            href={`/dashboard/${orgId}/teams/${teamId}/players/${player.id}`}
+                            className="hover:underline underline-offset-2"
+                          >
+                            {playerName}
+                          </Link>
                         </TableCell>
                         <TableCell className="align-top">
                           {player.guardians.length === 0 ? (
