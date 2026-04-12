@@ -67,7 +67,7 @@ export async function importCsvRoster(
   csvText: string,
 ): Promise<ImportResult> {
   // Auth check
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { importedCount: 0, skippedCount: 0, errors: [{ row: 0, message: "Unauthorized" }] };
   }

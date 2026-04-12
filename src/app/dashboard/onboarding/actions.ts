@@ -12,7 +12,7 @@ interface CreateOrgResult {
 }
 
 export async function createOrganization(formData: FormData): Promise<CreateOrgResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }
@@ -57,7 +57,7 @@ interface CreateSeasonResult {
 }
 
 export async function createSeason(formData: FormData): Promise<CreateSeasonResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }
@@ -94,7 +94,7 @@ interface AddSportsResult {
 }
 
 export async function addSports(orgId: string, sportNames: string[]): Promise<AddSportsResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }

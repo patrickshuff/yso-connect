@@ -20,7 +20,7 @@ export async function createEvent(
   orgId: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }
@@ -75,7 +75,7 @@ export async function cancelEvent(
   orgId: string,
   eventId: string,
 ): Promise<ActionResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }

@@ -7,7 +7,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   
   if (!userId) {
     // Middleware handles the primary redirect with UTM preservation.

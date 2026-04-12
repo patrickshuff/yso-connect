@@ -18,7 +18,7 @@ export async function updateReminderSettings(
   reminders24h: boolean,
   reminders2h: boolean,
 ): Promise<UpdateReminderSettingsResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }

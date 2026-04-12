@@ -58,7 +58,7 @@ export async function createPaymentItem(
   orgId: string,
   formData: FormData,
 ): Promise<CreatePaymentItemResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) return { success: false, error: "Unauthorized" };
 
   await requireRole(orgId, userId, "admin");
@@ -102,7 +102,7 @@ export async function createPaymentItem(
 // ---------------------------------------------------------------------------
 
 export async function getPaymentItems(orgId: string): Promise<PaymentItemRow[]> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "guardian");
@@ -130,7 +130,7 @@ export async function getPaymentItems(orgId: string): Promise<PaymentItemRow[]> 
 // ---------------------------------------------------------------------------
 
 export async function getPayments(orgId: string): Promise<PaymentRow[]> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "guardian");
@@ -163,7 +163,7 @@ export async function createCheckoutSession(
   orgId: string,
   paymentItemId: string,
 ): Promise<CreateCheckoutResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) return { success: false, error: "Unauthorized" };
 
   await requireRole(orgId, userId, "admin");

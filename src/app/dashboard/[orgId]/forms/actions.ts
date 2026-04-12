@@ -89,7 +89,7 @@ export async function createForm(
   orgId: string,
   formData: FormData,
 ): Promise<CreateFormResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) return { success: false, error: "Unauthorized" };
 
   await requireRole(orgId, userId, "admin");
@@ -135,7 +135,7 @@ export async function assignForm(
   formId: string,
   formData: FormData,
 ): Promise<AssignFormResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) return { success: false, error: "Unauthorized" };
 
   await requireRole(orgId, userId, "admin");
@@ -186,7 +186,7 @@ export async function submitForm(
   formId: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) return { success: false, error: "Unauthorized" };
 
   const assignmentId = formData.get("assignmentId") as string | null;
@@ -265,7 +265,7 @@ export async function updateForm(
   formId: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) return { success: false, error: "Unauthorized" };
 
   await requireRole(orgId, userId, "admin");
@@ -321,7 +321,7 @@ export async function deleteForm(
   orgId: string,
   formId: string,
 ): Promise<ActionResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) return { success: false, error: "Unauthorized" };
 
   await requireRole(orgId, userId, "admin");
@@ -349,7 +349,7 @@ export async function deleteForm(
 // ---------------------------------------------------------------------------
 
 export async function getFormsWithStats(orgId: string): Promise<FormWithStats[]> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "guardian");
@@ -407,7 +407,7 @@ export async function getFormsWithStats(orgId: string): Promise<FormWithStats[]>
 }
 
 export async function getFormDetail(orgId: string, formId: string): Promise<FormDetail | null> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "guardian");
@@ -429,7 +429,7 @@ export async function getFormAssignments(
   orgId: string,
   formId: string,
 ): Promise<FormAssignmentRow[]> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "guardian");
@@ -495,7 +495,7 @@ export async function getFormSubmissions(
   orgId: string,
   formId: string,
 ): Promise<SubmissionRow[]> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "admin");
@@ -540,7 +540,7 @@ export async function getFormSubmissions(
 }
 
 export async function getOrgTeams(orgId: string) {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "guardian");
@@ -553,7 +553,7 @@ export async function getOrgTeams(orgId: string) {
 }
 
 export async function getOrgPlayers(orgId: string) {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "guardian");
@@ -571,7 +571,7 @@ export async function getOrgPlayers(orgId: string) {
 
 /** Get assignments relevant to a guardian (org-wide, their players' teams, their players directly). */
 export async function getGuardianAssignments(orgId: string, formId: string, clerkUserId: string) {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   // Prevent callers from querying other users' data

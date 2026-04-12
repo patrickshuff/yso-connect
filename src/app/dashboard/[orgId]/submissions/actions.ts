@@ -14,7 +14,7 @@ export async function updateSubmissionStatus(
   status: SubmissionStatus,
   orgId: string,
 ) {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "admin");

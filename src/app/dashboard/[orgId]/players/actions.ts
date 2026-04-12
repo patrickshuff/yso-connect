@@ -16,7 +16,7 @@ export async function createPlayer(
   orgId: string,
   formData: FormData
 ): Promise<CreatePlayerResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }

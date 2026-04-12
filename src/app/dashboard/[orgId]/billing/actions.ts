@@ -14,7 +14,7 @@ interface CheckoutResult {
 export async function createCoachCheckoutSession(
   orgId: string,
 ): Promise<CheckoutResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }

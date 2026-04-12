@@ -10,7 +10,7 @@ export default async function FormsPage({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
 
   if (!userId) {
     throw new Error("Unauthorized");

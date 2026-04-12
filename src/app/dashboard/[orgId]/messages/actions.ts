@@ -20,7 +20,7 @@ export async function sendMessageAction(
   orgId: string,
   formData: FormData,
 ): Promise<SendMessageResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }
@@ -85,7 +85,7 @@ interface MessageRow {
 }
 
 export async function getMessages(orgId: string): Promise<MessageRow[]> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) throw new Error("Unauthorized");
 
   await requireRole(orgId, userId, "guardian");

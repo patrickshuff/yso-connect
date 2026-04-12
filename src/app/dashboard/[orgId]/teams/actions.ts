@@ -16,7 +16,7 @@ export async function createTeam(
   orgId: string,
   formData: FormData
 ): Promise<CreateTeamResult> {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return { success: false, error: "Unauthorized" };
   }

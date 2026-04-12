@@ -15,7 +15,9 @@ export default async function OrgDashboardLayout({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const { userId } = await auth();
+  // treatPendingAsSignedOut: false — new users without a Clerk org have pending
+  // sessions. We manage orgs in our own DB so we only need userId.
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
 
   if (!userId) {
     // Middleware handles the primary redirect with UTM preservation.

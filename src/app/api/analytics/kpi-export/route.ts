@@ -3,7 +3,7 @@ import { getCurrentLeadChannelBreakdown, getWeeklyKpiMetrics } from "@/lib/analy
 import { getUserOrganizations } from "@/lib/memberships";
 
 export async function GET() {
-  const { userId } = await auth();
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return new Response("Unauthorized", { status: 401 });
   }
