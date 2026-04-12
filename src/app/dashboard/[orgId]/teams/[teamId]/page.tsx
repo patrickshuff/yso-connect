@@ -42,16 +42,6 @@ interface PlayerRow {
   guardians: GuardianRow[];
 }
 
-function relationshipLabel(r: string): string | null {
-  switch (r) {
-    case "mother": return "Mother";
-    case "father": return "Father";
-    case "grandparent": return "Grandparent";
-    case "guardian": return null; // generic — hide suffix
-    default: return "Other";
-  }
-}
-
 function formatEventDate(date: Date): string {
   return date.toLocaleDateString("en-US", {
     weekday: "short",
