@@ -1,92 +1,72 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import type { NextRequest, NextFetchEvent } from "next/server";
 
 const AUTH_PATHS = ["/sign-in", "/sign-up"];
 
+// Routes that are accessible without authentication
 const PUBLIC_PREFIXES = [
-  "/",
-  "/o",
+  "/o/",
   "/privacy",
   "/terms",
   "/consent",
-  "/api/webhooks",
+  "/api/webhooks/",
   "/api/health",
-  "/api/cron",
-  "/api/analytics",
+  "/api/cron/",
+  "/api/analytics/",
   "/sitemap.xml",
   "/icon.svg",
   "/favicon.ico",
-  "/sign-in",
-  "/sign-up",
 ];
 
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;
-  return PUBLIC_PREFIXES.slice(1).some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+  return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
 function isAuthPath(pathname: string): boolean {
   return AUTH_PATHS.some((p) => pathname.startsWith(p));
 }
 
-// Clerk sets __session (HttpOnly JWT) when a user has an active session.
-// Reading the cookie presence is enough for redirect logic — the pages
-// themselves enforce proper token validation.
+// Clerk sets __session (HttpOnly JWT) for authenticated users.
 function hasClerkSession(request: NextRequest): boolean {
   return request.cookies.has("__session");
 }
 
-export function proxy(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
+export function proxy(request: NextRequest, _event: NextFetchEvent) {
+  const { pathname, searchParams } = request.nextUrl;
   const authenticated = hasClerkSession(request);
 
-  // Send signed-in users away from auth pages immediately
   if (authenticated && isAuthPath(pathname)) {
-    const redirectUrlParam = request.nextUrl.searchParams.get("redirect_url");
-    let targetUrl: URL;
+    // If a redirect_url was passed, go there; otherwise go to dashboard.
+    // Also forward any UTM params on the auth page URL to the destination.
+    const redirectTarget = searchParams.get("redirect_url") ?? "/dashboard";
+    const destination = new URL(redirectTarget, request.url);
 
-    if (redirectUrlParam) {
-      try {
-        targetUrl = new URL(redirectUrlParam, request.url);
-      } catch {
-        targetUrl = new URL("/dashboard", request.url);
+    for (const [key, value] of searchParams.entries()) {
+      if (key.startsWith("utm_")) {
+        destination.searchParams.set(key, value);
       }
-    } else {
-      targetUrl = new URL("/dashboard", request.url);
     }
 
-    // Preserve ALL search params (UTM, etc.) on the redirect target
-    request.nextUrl.searchParams.forEach((value, key) => {
-      if (key !== "redirect_url") {
-        targetUrl.searchParams.set(key, value);
-      }
-    });
-
-    return NextResponse.redirect(targetUrl);
+    return NextResponse.redirect(destination);
   }
 
-  // Block unauthenticated access to protected routes
   if (!authenticated && !isPublicPath(pathname)) {
-    const signInUrl = new URL("/sign-in", request.url);
-    // Preserving the full original URL including search params for attribution
-    const redirectUrl = `${pathname}${search}`;
-    signInUrl.searchParams.set("redirect_url", redirectUrl);
+    // Redirect to sign-in; preserve the full original URL as redirect_url
+    // and copy UTM params directly onto the sign-in URL for attribution.
+    const signIn = new URL("/sign-in", request.url);
+    const originalPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
+    signIn.searchParams.set("redirect_url", originalPath);
 
-    // Also copy all UTM parameters from the original request directly onto the
-    // /sign-in URL so the sign-in page can track them for attribution.
-    request.nextUrl.searchParams.forEach((value, key) => {
+    for (const [key, value] of searchParams.entries()) {
       if (key.startsWith("utm_")) {
-        signInUrl.searchParams.set(key, value);
+        signIn.searchParams.set(key, value);
       }
-    });
+    }
 
-    return NextResponse.redirect(signInUrl);
+    return NextResponse.redirect(signIn);
   }
 }
-
-export default proxy;
 
 export const config = {
   matcher: [

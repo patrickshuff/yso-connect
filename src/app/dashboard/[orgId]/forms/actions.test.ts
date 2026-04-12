@@ -271,7 +271,7 @@ describe("submitForm — assignment ownership bypass fix", () => {
       lastName: "Doe",
     }]);
     // insert().values() resolves (submitForm doesn't call .returning())
-    valuesMock.mockResolvedValueOnce(undefined);
+    (valuesMock as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
 
     const result = await submitForm("org_123", "form_123", makeFormData());
 
