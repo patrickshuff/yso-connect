@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import {
@@ -33,6 +33,19 @@ export default function QuickSetupPage() {
   const [teamName, setTeamName] = useState("");
   const [sport, setSport] = useState("");
   const [seasonName, setSeasonName] = useState("Spring 2026");
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(5);
+
+  // Auto-redirect countdown once team is created
+  useEffect(() => {
+    if (step !== 2 || !orgId) return;
+    if (countdown <= 0) {
+      router.push(`/dashboard/${orgId}`);
+      return;
+    }
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [step, orgId, countdown, router]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -43,6 +56,7 @@ export default function QuickSetupPage() {
       setError(result.error ?? "Something went wrong");
       return;
     }
+    setOrgId(result.orgId ?? null);
     setStep(2);
   };
 
@@ -160,14 +174,17 @@ export default function QuickSetupPage() {
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Season</p>
                   <p className="mt-0.5 font-semibold text-zinc-900 dark:text-zinc-50">{seasonName}</p>
                 </div>
-                <p className="pt-1 text-center text-xs text-muted-foreground">
-                  Your 30-day free trial has started · $10 for 6 months after that · Cancel anytime
-                </p>
               </div>
-              <div className="mt-6">
-                <Button className="w-full" onClick={() => router.push("/dashboard")}>
+              <div className="mt-6 space-y-2">
+                <Button
+                  className="w-full"
+                  onClick={() => orgId && router.push(`/dashboard/${orgId}`)}
+                >
                   Go to Dashboard
                 </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  Redirecting in {countdown}s…
+                </p>
               </div>
             </CardContent>
           </Card>

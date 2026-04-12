@@ -14,7 +14,9 @@ import {
 export async function getAuthUserId(): Promise<
   { userId: string } | { error: NextResponse }
 > {
-  const { userId } = await auth();
+  // treatPendingAsSignedOut: false — users without a Clerk org (new sign-ups)
+  // have "pending" sessions. We manage orgs in our own DB, so we still need userId.
+  const { userId } = await auth({ treatPendingAsSignedOut: false });
   if (!userId) {
     return {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
