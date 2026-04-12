@@ -2,14 +2,16 @@ import { eq, sql, count } from "drizzle-orm";
 import { Calendar } from "lucide-react";
 import { db } from "@/db";
 import { seasons, teams } from "@/db/schema";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + "T00:00:00");
@@ -73,32 +75,42 @@ export default async function SeasonsPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {seasonRows.map((season) => (
-            <Card key={season.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>{season.name}</CardTitle>
-                  {season.isActive ? (
-                    <Badge>Active</Badge>
-                  ) : (
-                    <Badge variant="secondary">Inactive</Badge>
-                  )}
-                </div>
-                <CardDescription>
-                  {formatDate(season.startDate)} &ndash;{" "}
-                  {formatDate(season.endDate)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {season.teamCount}{" "}
-                  {season.teamCount === 1 ? "team" : "teams"}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Season</TableHead>
+                  <TableHead>Dates</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Teams</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {seasonRows.map((season) => (
+                  <TableRow key={season.id}>
+                    <TableCell className="font-medium">{season.name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(season.startDate)} &ndash;{" "}
+                      {formatDate(season.endDate)}
+                    </TableCell>
+                    <TableCell>
+                      {season.isActive ? (
+                        <Badge>Active</Badge>
+                      ) : (
+                        <Badge variant="secondary">Inactive</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {season.teamCount}{" "}
+                      {season.teamCount === 1 ? "team" : "teams"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

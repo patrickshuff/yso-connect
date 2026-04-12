@@ -4,6 +4,14 @@ import { CreditCard, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { PaymentItemRow } from "@/app/dashboard/[orgId]/payments/actions";
 
 interface PaymentItemsListProps {
@@ -30,54 +38,72 @@ export function PaymentItemsList({ orgSlug, items }: PaymentItemsListProps) {
     return (
       <Card>
         <CardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No payment items yet. Create one to start accepting payments.
-          </p>
+          <div className="flex flex-col items-center gap-2 py-12">
+            <CreditCard className="size-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              No payment items yet. Create one to start accepting payments.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((item) => (
-        <Card key={item.id}>
-          <CardContent className="space-y-3 py-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                <CreditCard className="size-4 text-muted-foreground" />
-                <h4 className="font-semibold text-foreground">{item.title}</h4>
-              </div>
-              <Badge className={TYPE_STYLES[item.paymentType] ?? ""}>
-                {item.paymentType}
-              </Badge>
-            </div>
-            {item.description && (
-              <p className="text-sm text-muted-foreground">{item.description}</p>
-            )}
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-foreground">
-                {formatCents(item.amount, item.currency)}
-              </span>
-              <Badge variant={item.isActive ? "default" : "secondary"}>
-                {item.isActive ? "Active" : "Inactive"}
-              </Badge>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => {
-                const url = `${window.location.origin}/o/${orgSlug}/pay/${item.id}`;
-                navigator.clipboard.writeText(url);
-              }}
-            >
-              <ExternalLink className="size-3.5" data-icon="inline-start" />
-              Copy Payment Link
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <Card>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Link</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">
+                  <div>{item.title}</div>
+                  {item.description && (
+                    <div className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                      {item.description}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge className={TYPE_STYLES[item.paymentType] ?? ""}>
+                    {item.paymentType}
+                  </Badge>
+                </TableCell>
+                <TableCell className="font-semibold">
+                  {formatCents(item.amount, item.currency)}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={item.isActive ? "default" : "secondary"}>
+                    {item.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const url = `${window.location.origin}/o/${orgSlug}/pay/${item.id}`;
+                      navigator.clipboard.writeText(url);
+                    }}
+                  >
+                    <ExternalLink className="size-3.5" data-icon="inline-start" />
+                    Copy Link
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

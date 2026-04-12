@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EditFormDialog } from "@/components/dashboard/edit-form-dialog";
 import { DeleteFormDialog } from "@/components/dashboard/delete-form-dialog";
 import type { FormWithStats } from "@/app/dashboard/[orgId]/forms/actions";
@@ -42,57 +45,69 @@ export function FormsList({ orgId, forms, isAdmin }: FormsListProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {forms.map((form) => (
-        <Card key={form.id} className="transition-colors hover:border-primary/30">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <Link
-                href={`/dashboard/${orgId}/forms/${form.id}`}
-                className="min-w-0 flex-1"
-              >
-                <CardTitle className="line-clamp-1">{form.title}</CardTitle>
-              </Link>
-              <div className="flex items-center gap-1 ml-2 shrink-0">
-                <Badge variant={form.isActive ? "default" : "secondary"}>
-                  {form.isActive ? "Active" : "Inactive"}
-                </Badge>
+    <Card>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Form</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Completion</TableHead>
+              {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {forms.map((form) => (
+              <TableRow key={form.id}>
+                <TableCell className="font-medium">
+                  <Link
+                    href={`/dashboard/${orgId}/forms/${form.id}`}
+                    className="hover:underline underline-offset-2"
+                  >
+                    {form.title}
+                  </Link>
+                  {form.description && (
+                    <div className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                      {form.description}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <Badge variant="outline">
+                      {TYPE_LABELS[form.formType] ?? form.formType}
+                    </Badge>
+                    {form.requiresSignature && (
+                      <Badge variant="secondary">Signature</Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={form.isActive ? "default" : "secondary"}>
+                    {form.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {form.totalCompleted} of {form.totalAssigned} completed
+                </TableCell>
                 {isAdmin && (
-                  <>
-                    <EditFormDialog orgId={orgId} form={form} />
-                    <DeleteFormDialog
-                      orgId={orgId}
-                      formId={form.id}
-                      formTitle={form.title}
-                    />
-                  </>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <EditFormDialog orgId={orgId} form={form} />
+                      <DeleteFormDialog
+                        orgId={orgId}
+                        formId={form.id}
+                        formTitle={form.title}
+                      />
+                    </div>
+                  </TableCell>
                 )}
-              </div>
-            </div>
-          </CardHeader>
-          <Link
-            href={`/dashboard/${orgId}/forms/${form.id}`}
-            className="block"
-          >
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">{TYPE_LABELS[form.formType] ?? form.formType}</Badge>
-                {form.requiresSignature && (
-                  <Badge variant="secondary">Signature Required</Badge>
-                )}
-              </div>
-              {form.description && (
-                <p className="line-clamp-2 text-sm text-muted-foreground">
-                  {form.description}
-                </p>
-              )}
-              <p className="text-sm text-muted-foreground">
-                {form.totalCompleted} of {form.totalAssigned} completed
-              </p>
-            </CardContent>
-          </Link>
-        </Card>
-      ))}
-    </div>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

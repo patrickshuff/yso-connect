@@ -1,5 +1,14 @@
+import { Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { PaymentRow } from "@/app/dashboard/[orgId]/payments/actions";
 
 interface PaymentHistoryTableProps {
@@ -33,9 +42,12 @@ export function PaymentHistoryTable({ payments }: PaymentHistoryTableProps) {
     return (
       <Card>
         <CardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No payments recorded yet.
-          </p>
+          <div className="flex flex-col items-center gap-2 py-12">
+            <Receipt className="size-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              No payments recorded yet.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -44,43 +56,41 @@ export function PaymentHistoryTable({ payments }: PaymentHistoryTableProps) {
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Item</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Payer</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Amount</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((p) => (
-                <tr key={p.id} className="border-b border-border/50 last:border-0">
-                  <td className="px-4 py-3 font-medium text-foreground">{p.paymentItemTitle}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    <div>{p.payerName}</div>
-                    {p.payerEmail && (
-                      <div className="text-xs">{p.payerEmail}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-foreground">
-                    {formatCents(p.amount, p.currency)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge className={STATUS_STYLES[p.status] ?? ""}>
-                      {p.status}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {formatDate(p.paidAt ?? p.createdAt)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item</TableHead>
+              <TableHead>Payer</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {payments.map((p) => (
+              <TableRow key={p.id}>
+                <TableCell className="font-medium">
+                  {p.paymentItemTitle}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  <div>{p.payerName}</div>
+                  {p.payerEmail && (
+                    <div className="text-xs">{p.payerEmail}</div>
+                  )}
+                </TableCell>
+                <TableCell>{formatCents(p.amount, p.currency)}</TableCell>
+                <TableCell>
+                  <Badge className={STATUS_STYLES[p.status] ?? ""}>
+                    {p.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDate(p.paidAt ?? p.createdAt)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

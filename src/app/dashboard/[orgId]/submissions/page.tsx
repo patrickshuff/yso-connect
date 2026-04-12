@@ -1,15 +1,17 @@
 import { eq, desc } from "drizzle-orm";
-import { Inbox, Mail, Phone, User } from "lucide-react";
+import { Inbox, Mail, Phone } from "lucide-react";
 import { db } from "@/db";
 import { interestSubmissions } from "@/db/schema";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { SubmissionStatusButton } from "@/components/dashboard/submission-status-button";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -34,8 +36,6 @@ function formatDate(date: Date): string {
     month: "short",
     day: "numeric",
     year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
   });
 }
 
@@ -72,20 +72,32 @@ export default async function SubmissionsPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {submissions.map((submission) => (
-            <Card key={submission.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="flex items-center gap-2">
-                      <User className="size-4" />
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Parent</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Child</TableHead>
+                  <TableHead>Sport</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {submissions.map((submission) => (
+                  <TableRow key={submission.id}>
+                    <TableCell className="font-medium">
                       {submission.parentName}
-                      <Badge className={STATUS_STYLES[submission.status] ?? ""}>
-                        {submission.status}
-                      </Badge>
-                    </CardTitle>
-                    <CardDescription className="flex flex-wrap items-center gap-3">
+                      {submission.message && (
+                        <div className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                          {submission.message}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       <a
                         href={`mailto:${submission.parentEmail}`}
                         className="flex items-center gap-1 hover:underline"
@@ -96,88 +108,71 @@ export default async function SubmissionsPage({
                       {submission.parentPhone && (
                         <a
                           href={`tel:${submission.parentPhone}`}
-                          className="flex items-center gap-1 hover:underline"
+                          className="mt-0.5 flex items-center gap-1 text-xs hover:underline"
                         >
-                          <Phone className="size-3.5" />
+                          <Phone className="size-3" />
                           {submission.parentPhone}
                         </a>
                       )}
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(submission.createdAt)}
-                      </span>
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="grid gap-4 text-sm sm:grid-cols-3">
-                    {submission.childName && (
-                      <div>
-                        <p className="font-medium text-muted-foreground">
-                          Child
-                        </p>
-                        <p className="text-foreground">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {submission.childName ? (
+                        <>
                           {submission.childName}
                           {submission.childAge
                             ? ` (age ${submission.childAge})`
                             : ""}
-                        </p>
+                        </>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {submission.sportInterest ?? <span>—</span>}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={STATUS_STYLES[submission.status] ?? ""}>
+                        {submission.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                      {formatDate(submission.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap justify-end gap-1">
+                        {submission.status !== "contacted" && (
+                          <SubmissionStatusButton
+                            submissionId={submission.id}
+                            orgId={orgId}
+                            targetStatus="contacted"
+                            label="Contacted"
+                          />
+                        )}
+                        {submission.status !== "enrolled" && (
+                          <SubmissionStatusButton
+                            submissionId={submission.id}
+                            orgId={orgId}
+                            targetStatus="enrolled"
+                            label="Enrolled"
+                          />
+                        )}
+                        {submission.status !== "declined" && (
+                          <SubmissionStatusButton
+                            submissionId={submission.id}
+                            orgId={orgId}
+                            targetStatus="declined"
+                            label="Decline"
+                            variant="ghost"
+                          />
+                        )}
                       </div>
-                    )}
-                    {submission.sportInterest && (
-                      <div>
-                        <p className="font-medium text-muted-foreground">
-                          Sport Interest
-                        </p>
-                        <p className="text-foreground">
-                          {submission.sportInterest}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  {submission.message && (
-                    <div className="text-sm">
-                      <p className="font-medium text-muted-foreground">
-                        Message
-                      </p>
-                      <p className="mt-1 text-foreground">
-                        {submission.message}
-                      </p>
-                    </div>
-                  )}
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {submission.status !== "contacted" && (
-                      <SubmissionStatusButton
-                        submissionId={submission.id}
-                        orgId={orgId}
-                        targetStatus="contacted"
-                        label="Mark Contacted"
-                      />
-                    )}
-                    {submission.status !== "enrolled" && (
-                      <SubmissionStatusButton
-                        submissionId={submission.id}
-                        orgId={orgId}
-                        targetStatus="enrolled"
-                        label="Mark Enrolled"
-                      />
-                    )}
-                    {submission.status !== "declined" && (
-                      <SubmissionStatusButton
-                        submissionId={submission.id}
-                        orgId={orgId}
-                        targetStatus="declined"
-                        label="Decline"
-                        variant="ghost"
-                      />
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

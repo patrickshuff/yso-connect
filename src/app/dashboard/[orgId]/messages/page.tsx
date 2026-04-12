@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { MessageSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getMessages } from "./actions";
 
 function formatDate(date: Date | null): string {
@@ -71,50 +73,61 @@ export default async function MessagesPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {messageRows.map((msg) => (
-            <Card key={msg.id}>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-base">
-                      {msg.subject ?? "(No subject)"}
-                    </CardTitle>
-                    <CardDescription className="mt-1 flex items-center gap-2">
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Audience</TableHead>
+                  <TableHead>Channel</TableHead>
+                  <TableHead>Deliveries</TableHead>
+                  <TableHead>Sent</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {messageRows.map((msg) => (
+                  <TableRow key={msg.id}>
+                    <TableCell className="font-medium">
+                      <div>{msg.subject ?? "(No subject)"}</div>
+                      <div className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                        {msg.body}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <Badge variant="secondary">
                         {msg.targetType === "team" && msg.teamName
                           ? msg.teamName
                           : "Entire Organization"}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
                       <Badge variant="outline">{channelLabel(msg.channel)}</Badge>
-                    </CardDescription>
-                  </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDate(msg.sentAt)}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {msg.body}
-                </p>
-                <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{msg.totalDeliveries} deliveries</span>
-                  {msg.sentDeliveries > 0 && (
-                    <span className="text-green-600 dark:text-green-400">
-                      {msg.sentDeliveries} sent
-                    </span>
-                  )}
-                  {msg.failedDeliveries > 0 && (
-                    <span className="text-red-600 dark:text-red-400">
-                      {msg.failedDeliveries} failed
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span>{msg.totalDeliveries} total</span>
+                        {msg.sentDeliveries > 0 && (
+                          <span className="text-green-600 dark:text-green-400">
+                            {msg.sentDeliveries} sent
+                          </span>
+                        )}
+                        {msg.failedDeliveries > 0 && (
+                          <span className="text-red-600 dark:text-red-400">
+                            {msg.failedDeliveries} failed
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                      {formatDate(msg.sentAt)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
