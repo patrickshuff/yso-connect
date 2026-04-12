@@ -1,4 +1,5 @@
 import { buildUnsubscribeUrl } from "@/lib/unsubscribe-token";
+import { buildConfirmationUrl } from "@/lib/confirmation-token";
 
 function escapeHtml(str: string): string {
   return str
@@ -128,6 +129,56 @@ export function buildWelcomeEmail(params: WelcomeEmailParams): string {
         </td>
       </tr>
     </table>
+  `;
+
+  const footer = standardFooter(orgName, unsubscribeUrl);
+
+  return baseLayout(header, body, footer);
+}
+
+export interface GuardianConfirmationEmailParams {
+  firstName: string;
+  playerName: string;
+  teamName: string;
+  orgName: string;
+  appUrl: string;
+  guardianId: string;
+}
+
+export function buildGuardianConfirmationEmail(
+  params: GuardianConfirmationEmailParams,
+): string {
+  const { firstName, playerName, teamName, orgName, appUrl, guardianId } =
+    params;
+  const confirmUrl = buildConfirmationUrl(appUrl, guardianId);
+  const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardianId);
+
+  const header = standardHeader(orgName);
+
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#111827;">Hi ${escapeHtml(firstName)},</h1>
+
+    <p style="margin:0 0 16px;font-size:16px;color:#374151;line-height:1.7;">
+      You've been added as a guardian for <strong>${escapeHtml(playerName)}</strong>
+      on <strong>${escapeHtml(teamName)}</strong>.
+    </p>
+
+    <p style="margin:0 0 24px;font-size:16px;color:#374151;line-height:1.7;">
+      Click the button below to confirm you'd like to receive schedule updates,
+      reminders, and messages about ${escapeHtml(playerName)}'s team.
+    </p>
+
+    <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="background-color:${BRAND_BLUE};border-radius:6px;">
+          <a href="${confirmUrl}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.01em;">Confirm email updates</a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;">
+      If you weren't expecting this, you can safely ignore this email.
+    </p>
   `;
 
   const footer = standardFooter(orgName, unsubscribeUrl);

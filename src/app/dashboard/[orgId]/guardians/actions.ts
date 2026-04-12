@@ -4,10 +4,17 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { guardians, organizations, playerGuardians, players } from "@/db/schema";
+import {
+  guardians,
+  organizations,
+  playerGuardians,
+  players,
+  teamPlayers,
+  teams,
+} from "@/db/schema";
 import { requireRole } from "@/lib/memberships";
 import { sendEmail } from "@/lib/email";
-import { buildWelcomeEmail } from "@/lib/email-templates";
+import { buildGuardianConfirmationEmail } from "@/lib/email-templates";
 import { buildUnsubscribeUrl } from "@/lib/unsubscribe-token";
 import { logger } from "@/lib/logger";
 
@@ -87,9 +94,12 @@ export async function createGuardian(
 
   revalidatePath(`/dashboard/${orgId}`, "layout");
 
-  // Fire welcome email non-blocking — guardian was already created
-  if (guardian.email) {
+  // Fire confirmation email non-blocking — guardian was already created.
+  // We only send a confirmation email when we have player + team context,
+  // so the opt-in message can name the child and team.
+  if (guardian.email && playerId) {
     const guardianEmail = guardian.email;
+    const linkedPlayerId = playerId;
     void (async () => {
       try {
         const [org] = await db
@@ -97,12 +107,37 @@ export async function createGuardian(
           .from(organizations)
           .where(eq(organizations.id, orgId));
 
-        const orgName = org?.name ?? "Your Organization";
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
-        const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardian.id);
+        const [playerInfo] = await db
+          .select({
+            playerFirstName: players.firstName,
+            playerLastName: players.lastName,
+            teamName: teams.name,
+          })
+          .from(players)
+          .leftJoin(teamPlayers, eq(teamPlayers.playerId, players.id))
+          .leftJoin(teams, eq(teamPlayers.teamId, teams.id))
+          .where(eq(players.id, linkedPlayerId))
+          .limit(1);
 
-        const htmlBody = buildWelcomeEmail({
+        if (!playerInfo || !playerInfo.teamName) {
+          logger.warn(
+            "Skipping guardian confirmation email — no team linked to player",
+            { guardianId: guardian.id, orgId, playerId: linkedPlayerId },
+          );
+          return;
+        }
+
+        const orgName = org?.name ?? "Your Organization";
+        const appUrl =
+          process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ysoconnect.com";
+        const unsubscribeUrl = buildUnsubscribeUrl(appUrl, guardian.id);
+        const playerName =
+          `${playerInfo.playerFirstName} ${playerInfo.playerLastName}`.trim();
+
+        const htmlBody = buildGuardianConfirmationEmail({
           firstName: guardian.firstName,
+          playerName,
+          teamName: playerInfo.teamName,
           orgName,
           appUrl,
           guardianId: guardian.id,
@@ -114,32 +149,37 @@ export async function createGuardian(
 
         const result = await sendEmail(
           guardianEmail,
-          `Welcome to ${orgName}!`,
+          `Confirm you'd like updates about ${playerName}`,
           htmlBody,
           unsubscribeHeaders,
         );
 
         if (!result.success) {
-          logger.warn("Guardian welcome email failed", {
+          logger.warn("Guardian confirmation email failed", {
             guardianId: guardian.id,
             orgId,
             error: result.error,
           });
         } else {
-          logger.info("Guardian welcome email sent", {
+          logger.info("Guardian confirmation email sent", {
             guardianId: guardian.id,
             orgId,
             emailId: result.id,
           });
         }
       } catch (err) {
-        logger.error("Unexpected error sending guardian welcome email", {
+        logger.error("Unexpected error sending guardian confirmation email", {
           guardianId: guardian.id,
           orgId,
           error: err instanceof Error ? err.message : String(err),
         });
       }
     })();
+  } else if (guardian.email && !playerId) {
+    logger.warn(
+      "Guardian created with email but no player — skipping confirmation email",
+      { guardianId: guardian.id, orgId },
+    );
   }
 
   return { success: true, guardianId: guardian.id };

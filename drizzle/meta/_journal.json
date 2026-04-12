@@ -43,6 +43,13 @@
       "when": 1775898000000,
       "tag": "0005_webhook_idempotency_reminder_retry",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1775970001131,
+      "tag": "0006_lame_quicksilver",
+      "breakpoints": true
     }
   ]
 }

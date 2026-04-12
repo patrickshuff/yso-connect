@@ -11,6 +11,7 @@ export const guardians = pgTable("guardians", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   preferredContact: contactPreferenceEnum("preferred_contact").notNull().default("sms"),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 }, (table) => [
